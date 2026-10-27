@@ -1,9 +1,13 @@
 import * as ImagePicker from 'expo-image-picker';
 
+import type { GarmentCategory } from '@/domain/categories';
 import { AppError } from '@/domain/errors';
 import type { GarmentItem } from '@/domain/models';
 import { renderJpeg } from '@/infrastructure/image-processing/image-pipeline';
 import { persistGarmentFile } from '@/infrastructure/file-storage/app-files';
+import { downloadProductImage, fetchPageHtml } from '@/infrastructure/product-link/link-fetcher';
+
+import { cleanTitle, guessCategory, normalizeProductUrl, parseProductMeta, type ProductMeta } from './product-link';
 
 /** Long side of the stored working copy / grid thumbnail. */
 const WORKING_MAX = 1280;
@@ -43,4 +47,29 @@ export async function storeGarmentPhoto(photo: PickedPhoto, garmentId: string): 
   const originalUri = await persistGarmentFile(work.uri, garmentId, 'original', work.base64);
   const thumbnailUri = await persistGarmentFile(thumb.uri, garmentId, 'thumb', thumb.base64);
   return { originalUri, thumbnailUri };
+}
+
+export interface LinkImport {
+  photo: PickedPhoto;
+  meta: ProductMeta;
+  categoryHint: GarmentCategory | null;
+  name: string | null;
+}
+
+/**
+ * Shopping-mall link → product photo + suggested fields. Reads only the page's link-preview
+ * metadata (Open Graph / schema.org Product). Pages that hide it behind a login or script render
+ * fail with a clear message; the user can save the photo and upload it instead.
+ */
+export async function importFromProductLink(input: string): Promise<LinkImport> {
+  const url = normalizeProductUrl(input);
+  if (!url) throw new AppError('validation', '상품 페이지 링크(https://…)를 붙여 넣어 주세요.');
+  // Instagram pages sit behind a login wall and its terms forbid automated reading (D-018).
+  if (/(^|\.)(instagram\.com|instagr\.am)$/i.test(new URL(url).hostname)) {
+    throw new AppError('validation', '인스타그램 게시물은 링크로 가져올 수 없어요. 사진을 기기에 저장한 뒤 위의 사진 추가로 올려 주세요.');
+  }
+  const meta = parseProductMeta(await fetchPageHtml(url), url);
+  if (!meta.imageUrl) throw new AppError('link-unreadable');
+  const photo = await downloadProductImage(meta.imageUrl);
+  return { photo, meta, categoryHint: guessCategory(meta.title), name: cleanTitle(meta.title, meta.siteName) };
 }

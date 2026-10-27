@@ -198,8 +198,8 @@ function SampleFeedCard({ post, onPress }: { post: SamplePost; onPress: () => vo
 const styles = StyleSheet.create({
   banner: { borderRadius: radius.tile, overflow: 'hidden' },
   bannerHead: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
-  wide: { width: '100%', aspectRatio: 2.4 },
+  wide: { width: '100%', aspectRatio: 1.5 },
   heartPos: { position: 'absolute', right: spacing.xs, bottom: spacing.xs },
-  feedPhoto: { width: '100%', aspectRatio: 1.35, borderRadius: radius.tile, overflow: 'hidden' },
+  feedPhoto: { width: '100%', aspectRatio: 0.8, borderRadius: radius.tile, overflow: 'hidden' },
   photo: { width: '100%', aspectRatio: 4 / 5, borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card },
 });

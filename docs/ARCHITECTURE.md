@@ -87,4 +87,4 @@ WeatherContext ─▶ resolveWeatherSignal ─────────┘       
 ## 5. 플랫폼
 - iOS/Android: NativeTabs, expo-sqlite(WAL), expo-file-system 새 API.
 - Web: **UI QA 전용 미리보기**(JS 탭, wasm SQLite, data URI 썸네일). 출시 대상 아님.
-- 네이티브 모듈은 모두 Expo Go 포함 모듈(react-native-svg, expo-location 등) → 현재 개발 빌드 불필요. ONNX/Skia 도입 시 development build 필요(ROADMAP 참고).
+- 2026-10-27부터 `expo-share-intent`(공유 받기) 때문에 **development build 필요**(Expo Go 불가, D-020). 공유 흐름: OS 공유 → `ShareIntentProvider`(루트) → `ShareIntentRouter` → `/wardrobe/add?sharedImage|sharedLink`.

@@ -1,16 +1,16 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { AppText, BottomBar, BottomSheet, InlineMessage, MultiChips, PrimaryButton, ScreenScroll, TextField, ValueRow, bottomBarMaxHeight, elevation, radius, spacing, useColors } from '@/design-system';
+import { AppText, BottomBar, BottomSheet, InlineMessage, MultiChips, PrimaryButton, Row, ScreenScroll, SecondaryButton, TextField, ValueRow, bottomBarMaxHeight, elevation, radius, spacing, useColors } from '@/design-system';
 import { GARMENT_CATEGORIES, OCCASIONS, OUTER_WEIGHTS, PATTERNS, SEASONS, STYLE_TAGS, labelOf, type GarmentCategory, type OuterWeight, type Pattern } from '@/domain/categories';
 import { toUserMessage } from '@/domain/errors';
 import type { GarmentItem } from '@/domain/models';
 import { GARMENT_COLORS, type ColorId } from '@/domain/palette';
 import { newId } from '@/utils/id';
 
-import { pickGarmentPhoto, storeGarmentPhoto, type PickedPhoto } from '../garment-import';
+import { importFromProductLink, pickGarmentPhoto, storeGarmentPhoto, type PickedPhoto } from '../garment-import';
 import { saveGarment } from '../garment-repository';
 
 export function emptyGarment(): GarmentItem {
@@ -52,13 +52,16 @@ const CATS = GARMENT_CATEGORIES.map((c) => ({ id: c.id, label: c.label }));
  * Add/edit form (showcase 옷 등록: photo box, 카테고리 › / 색상 ●●● / 패턴 › / 계절 › rows, 등록하기; prompt §3.3 A/C). Every attribute is chosen by the user — no analyzer is wired
  * yet, so nothing is auto-filled and nothing is labeled "AI". Price is optional (CPW needs it).
  */
-export function GarmentEditor({ initial, onSaved }: { initial: GarmentItem; onSaved: (g: GarmentItem) => void }) {
+export function GarmentEditor({ initial, onSaved, initialPhoto = null, initialLink = null }: { initial: GarmentItem; onSaved: (g: GarmentItem) => void; initialPhoto?: PickedPhoto | null; initialLink?: string | null }) {
   const c = useColors();
   const [g, setG] = useState<GarmentItem>(initial);
-  const [photo, setPhoto] = useState<PickedPhoto | null>(null);
+  const [photo, setPhoto] = useState<PickedPhoto | null>(initialPhoto);
   const [price, setPrice] = useState(initial.purchasePriceMinor != null ? String(initial.purchasePriceMinor) : '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [link, setLink] = useState(initialLink ?? '');
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkNote, setLinkNote] = useState<{ tone: 'success' | 'error'; text: string } | null>(initialPhoto ? { tone: 'success', text: '공유한 사진을 불러왔어요. 이름·카테고리를 골라 등록해 주세요.' } : null);
   const [sheet, setSheet] = useState<'category' | 'pattern' | 'season' | 'weight' | 'occasion' | null>(null);
   const swatches = useMemo(() => GARMENT_COLORS.map((x) => ({ ...x, isLight: x.luminanceGroup === 2 })), []);
   const set = (patch: Partial<GarmentItem>) => setG((cur) => ({ ...cur, ...patch }));
@@ -71,6 +74,38 @@ export function GarmentEditor({ initial, onSaved }: { initial: GarmentItem; onSa
       setError(toUserMessage(e));
     }
   };
+
+  // Shopping-mall link → photo + suggested name/brand/price/category, all editable below.
+  const fromLink = async (input: string = link) => {
+    setLinkBusy(true);
+    setLinkNote(null);
+    try {
+      const r = await importFromProductLink(input);
+      setPhoto(r.photo);
+      setG((cur) => ({
+        ...cur,
+        name: cur.name.trim() ? cur.name : (r.name ?? ''),
+        brand: cur.brand ?? r.meta.brand,
+        category: r.categoryHint ?? cur.category,
+        note: cur.note ?? `구매 링크: ${r.meta.url}`,
+      }));
+      if (r.meta.priceMinor != null && !price.trim()) setPrice(String(r.meta.priceMinor));
+      setLinkNote({ tone: 'success', text: `${r.meta.siteName ?? '링크'}에서 사진${r.name ? '·이름' : ''}${r.meta.priceMinor != null ? '·가격' : ''}을 가져왔어요. 카테고리·색상이 맞는지 확인해 주세요.` });
+    } catch (e) {
+      setLinkNote({ tone: 'error', text: toUserMessage(e) });
+    } finally {
+      setLinkBusy(false);
+    }
+  };
+
+  // A link shared from another app is imported once, right away.
+  const autoLinkDone = useRef(false);
+  useEffect(() => {
+    if (!initialLink || autoLinkDone.current) return;
+    autoLinkDone.current = true;
+    void fromLink(initialLink);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once for the shared link
+  }, [initialLink]);
 
   const save = async () => {
     const priceNum = price.trim() ? Number(price.replace(/[^0-9]/g, '')) : null;
@@ -123,7 +158,15 @@ export function GarmentEditor({ initial, onSaved }: { initial: GarmentItem; onSa
           배경 제거·자동 분류는 아직 지원하지 않아요. 아래 항목을 직접 골라 주세요.
         </AppText>
 
-        <TextField label="이름" value={g.name} onChangeText={(name) => set({ name })} placeholder="예: 그레이 니트" maxLength={40} />
+        <View style={{ gap: spacing.xs, marginBottom: spacing.sm }}>
+          <TextField label="쇼핑몰 링크로 가져오기 (선택)" value={link} onChangeText={setLink} placeholder="상품 페이지 링크 붙여넣기" autoCapitalize="none" autoCorrect={false} keyboardType="url" />
+          <Row gap={spacing.xs}>
+            <SecondaryButton compact label="링크에서 가져오기" icon="link-outline" loading={linkBusy} disabled={!link.trim()} onPress={() => fromLink()} style={{ flex: 1 }} />
+          </Row>
+          {linkNote ? <InlineMessage tone={linkNote.tone} message={linkNote.text} /> : null}
+        </View>
+
+        <TextField label="이름" value={g.name} onChangeText={(name) => set({ name })} placeholder="예: 그레이 니트" maxLength={60} />
         <ValueRow label="카테고리" value={labelOf(CATS, g.category)} onPress={() => setSheet('category')} />
         <ValueRow label="색상">
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxWidth: '68%' }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>

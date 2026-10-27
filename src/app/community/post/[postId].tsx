@@ -81,7 +81,7 @@ export default function PostDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  photo: { width: '100%', aspectRatio: 0.94, borderRadius: radius.tile, overflow: 'hidden' },
+  photo: { width: '100%', aspectRatio: 0.78, borderRadius: radius.tile, overflow: 'hidden' },
   action: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 36 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: spacing.xs },
   inputBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: spacing.xs, paddingHorizontal: spacing.md, paddingTop: spacing.xs },

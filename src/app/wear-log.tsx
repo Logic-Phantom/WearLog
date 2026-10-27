@@ -19,9 +19,9 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
 /** Showcase example rows, shown only while there are no records. Never stored, never counted. */
 const EXAMPLES = [
-  { id: 'ex-1', templateId: 'ph-zip-black', name: '블랙 집업 재킷', wears: 5, price: 45000 },
-  { id: 'ex-2', templateId: 'ph-denim-wide', name: '데님 팬츠', wears: 8, price: 79000 },
-  { id: 'ex-3', templateId: 'ph-sweater-gray', name: '그레이 니트 스웨터', wears: 3, price: 12000 },
+  { id: 'ex-1', templateId: 'ph-zip-jacket-black', name: '블랙 집업 재킷', wears: 5, price: 45000 },
+  { id: 'ex-2', templateId: 'ph-jeans-mid', name: '와이드 데님', wears: 8, price: 79000 },
+  { id: 'ex-3', templateId: 'ph-knit-cream', name: '크림 니트', wears: 3, price: 12000 },
 ];
 
 /**

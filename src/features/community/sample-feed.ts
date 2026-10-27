@@ -2,7 +2,7 @@ import type { StyleTag } from '@/domain/categories';
 import { showcaseImage } from '@/features/sample-wardrobe/showcase-assets';
 
 /**
- * Bundled example posts built from the showcase photos. Shown only while the community server is
+ * Bundled example posts built from the user-provided sample street photos. Shown only while the community server is
  * not configured, always under a "샘플 게시물" label — they are not real users and hearts on them
  * stay on this screen (never sent, never stored).
  */
@@ -26,81 +26,14 @@ export interface SamplePost {
 const img = (k: string) => showcaseImage(k);
 
 export const SAMPLE_POSTS: readonly SamplePost[] = [
-  {
-    id: 'sample-rainy-coat',
-    authorHandle: 'j_min',
-    avatar: img('p-avatar-jmin'),
-    image: img('p-comm-detail'),
-    wide: img('p-comm-best'),
-    feed: img('p-comm-feed'),
-    title: '비 오는 날, 분위기 있는 코디 🌧️',
-    hashtags: ['#데일리룩', '#겨울', '#코트', '#모자'],
-    styleTags: ['minimal', 'classic'],
-    likeCount: 2400,
-    commentCount: 128,
-    timeLabel: '1시간 전',
-    featured: true,
-  },
-  {
-    id: 'sample-trench',
-    authorHandle: 'style.daily',
-    avatar: img('p-avatar-style'),
-    image: img('p-home-best'),
-    wide: img('p-home-best'),
-    feed: img('p-home-best'),
-    title: '가을비에 어울리는 감성 코디 🌧️',
-    hashtags: ['#데일리룩', '#가을', '#코트'],
-    styleTags: ['classic'],
-    likeCount: 1200,
-    commentCount: 42,
-    timeLabel: '3시간 전',
-    featured: true,
-  },
-  {
-    id: 'sample-look-trench',
-    authorHandle: 'mono.fit',
-    avatar: undefined,
-    image: img('p-look-2'),
-    wide: img('p-look-2'),
-    feed: img('p-look-2'),
-    title: '트렌치 코트 + 와이드팬츠',
-    hashtags: ['#출근룩', '#트렌치'],
-    styleTags: ['classic', 'minimal'],
-    likeCount: 860,
-    commentCount: 17,
-    timeLabel: '5시간 전',
-    featured: true,
-  },
-  {
-    id: 'sample-look-denim',
-    authorHandle: 'weekend.k',
-    avatar: undefined,
-    image: img('p-look-1'),
-    wide: img('p-look-1'),
-    feed: img('p-look-1'),
-    title: '가벼운 자켓 + 데님',
-    hashtags: ['#캐주얼', '#데님'],
-    styleTags: ['casual', 'street'],
-    likeCount: 530,
-    commentCount: 9,
-    timeLabel: '어제',
-    featured: false,
-  },
-  {
-    id: 'sample-look-hoodie',
-    authorHandle: 'gray.day',
-    avatar: undefined,
-    image: img('p-look-3'),
-    wide: img('p-look-3'),
-    feed: img('p-look-3'),
-    title: '후드티 + 조거팬츠',
-    hashtags: ['#원마일웨어', '#그레이'],
-    styleTags: ['casual', 'sporty'],
-    likeCount: 410,
-    commentCount: 6,
-    timeLabel: '어제',
-    featured: false,
-  },
+  { id: 'sample-trench', authorHandle: 'mood.coat', avatar: img('p-avatar-b'), image: img('p-street-trench'), wide: img('p-street-trench'), feed: img('p-street-trench'), title: '트렌치 코트로 완성한 출근룩', hashtags: ['#출근룩', '#코트', '#가을'], styleTags: ['classic', 'minimal'], likeCount: 2400, commentCount: 128, timeLabel: '1시간 전', featured: true },
+  { id: 'sample-blouson', authorHandle: 'campus.kim', avatar: img('p-avatar-c'), image: img('p-look-blouson'), wide: img('p-look-blouson'), feed: img('p-look-blouson'), title: '아이보리 블루종 + 헤드폰 🎧', hashtags: ['#캠퍼스룩', '#블루종', '#데일리룩'], styleTags: ['casual', 'cityboy'], likeCount: 1800, commentCount: 64, timeLabel: '2시간 전', featured: true },
+  { id: 'sample-knit', authorHandle: 'soft.daily', avatar: img('p-avatar-d'), image: img('p-look-knit'), wide: img('p-look-knit'), feed: img('p-look-knit'), title: '차콜 니트로 차분한 하루', hashtags: ['#니트', '#미니멀', '#가을'], styleTags: ['minimal'], likeCount: 1200, commentCount: 42, timeLabel: '3시간 전', featured: true },
+  { id: 'sample-black-jacket', authorHandle: 'city.boy', avatar: img('p-avatar-a'), image: img('p-look-jacket'), wide: img('p-look-jacket'), feed: img('p-look-jacket'), title: '올블랙 집업 재킷 코디', hashtags: ['#시티보이', '#올블랙', '#와이드팬츠'], styleTags: ['cityboy', 'street'], likeCount: 980, commentCount: 31, timeLabel: '5시간 전', featured: true },
+  { id: 'sample-navy-shirt', authorHandle: 'j_min', avatar: img('p-avatar-a'), image: img('p-look-navy'), wide: img('p-look-navy'), feed: img('p-look-navy'), title: '네이비 셔츠에 아이보리 팬츠 ☕', hashtags: ['#셔츠코디', '#간절기'], styleTags: ['classic', 'cityboy'], likeCount: 860, commentCount: 17, timeLabel: '어제', featured: false },
+  { id: 'sample-cream', authorHandle: 'style.daily', avatar: img('p-avatar-d'), image: img('p-look-cream'), wide: img('p-look-cream'), feed: img('p-look-cream'), title: '크림 니트 + 와이드 데님', hashtags: ['#데일리룩', '#데님'], styleTags: ['casual'], likeCount: 720, commentCount: 12, timeLabel: '어제', featured: false },
+  { id: 'sample-zip', authorHandle: 'gray.day', avatar: img('p-avatar-b'), image: img('p-look-zip'), wide: img('p-look-zip'), feed: img('p-look-zip'), title: '그레이 후드 집업 원마일웨어', hashtags: ['#원마일웨어', '#그레이'], styleTags: ['casual', 'sporty'], likeCount: 530, commentCount: 9, timeLabel: '2일 전', featured: false },
+  { id: 'sample-puffer', authorHandle: 'winter.lee', avatar: img('p-avatar-c'), image: img('p-look-puffer'), wide: img('p-look-puffer'), feed: img('p-look-puffer'), title: '숏패딩 꺼낼 날씨 🧊', hashtags: ['#겨울코디', '#패딩'], styleTags: ['street', 'casual'], likeCount: 410, commentCount: 6, timeLabel: '2일 전', featured: false },
 ];
 
 export function getSamplePost(id: string): SamplePost | undefined {
@@ -109,7 +42,7 @@ export function getSamplePost(id: string): SamplePost | undefined {
 
 /** Showcase "날씨 상세 → 오늘의 코디 추천" example looks (full-body sample photos). */
 export const SAMPLE_LOOKS: readonly { id: string; image: number | undefined; caption: string }[] = [
-  { id: 'look-1', image: img('p-look-1'), caption: '가벼운 자켓 + 데님' },
-  { id: 'look-2', image: img('p-look-2'), caption: '트렌치 코트 + 와이드팬츠' },
-  { id: 'look-3', image: img('p-look-3'), caption: '후드티 + 조거팬츠' },
+  { id: 'look-jacket', image: img('p-street-jacket'), caption: '블랙 재킷 + 와이드 팬츠' },
+  { id: 'look-trench', image: img('p-look-trench'), caption: '트렌치 코트 + 데님' },
+  { id: 'look-hoodie', image: img('p-look-hoodie'), caption: '후드티 + 블랙 팬츠' },
 ];

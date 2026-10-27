@@ -14,7 +14,7 @@ import { useAsync } from '@/hooks/use-async';
 type Tab = 'owned' | 'sample';
 type Cat = GarmentCategory | 'all';
 /** Showcase 옷장 grid order; other photo samples follow. */
-const SHOWCASE_ORDER = ['ph-trench-beige', 'ph-fleece-charcoal', 'ph-coverall', 'ph-jeans-light', 'ph-jeans-indigo', 'ph-shoes-black', 'ph-chunky-black', 'ph-sweat-gray', 'ph-sneakers-brown', 'ph-knit-black', 'ph-knit-white'];
+const SHOWCASE_ORDER = ['ph-coat-beige', 'ph-zip-jacket-black', 'ph-puffer-black', 'ph-jeans-light', 'ph-jeans-mid', 'ph-sneakers-white', 'ph-loafers-black', 'ph-knit-cream', 'ph-runner-gray', 'ph-knit-black', 'ph-hoodie-gray', 'ph-shirt-navy'];
 const rank = (id: string) => (SHOWCASE_ORDER.includes(id) ? SHOWCASE_ORDER.indexOf(id) : SHOWCASE_ORDER.length);
 const CATS: { id: Cat; label: string }[] = [{ id: 'all', label: '전체' }, ...GARMENT_CATEGORIES.filter((c) => c.id !== 'other' && c.id !== 'onepiece')];
 

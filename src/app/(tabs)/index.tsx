@@ -28,8 +28,7 @@ export default function HomeScreen() {
   const area = weatherPrefs.manualAreaId ? getArea(weatherPrefs.manualAreaId) : null;
   const communityReady = communityRepository.status() === 'ready';
   const cardW = Math.round((Math.min(width, contentMaxWidth) - spacing.md * 2) * 0.62);
-  // Showcase order: the trench look first.
-  const best = [...SAMPLE_POSTS.filter((p) => p.featured)].sort((a, b) => Number(b.id === 'sample-trench') - Number(a.id === 'sample-trench'));
+  const best = SAMPLE_POSTS.filter((p) => p.featured);
 
   return (
     <ScreenScroll topInset>

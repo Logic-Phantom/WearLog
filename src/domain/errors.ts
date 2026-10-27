@@ -16,6 +16,7 @@ export type AppErrorCode =
   | 'auth-failed'
   | 'rate-limited'
   | 'validation'
+  | 'link-unreadable'
   | 'unknown';
 
 const MESSAGES: Record<AppErrorCode, string> = {
@@ -35,6 +36,7 @@ const MESSAGES: Record<AppErrorCode, string> = {
   'auth-failed': '인증에 실패했어요. 코드를 다시 확인해 주세요.',
   'rate-limited': '요청이 너무 많아요. 잠시 후 다시 시도해 주세요.',
   validation: '입력값을 확인해 주세요.',
+  'link-unreadable': '이 링크에서 상품 사진을 찾지 못했어요. 상품 상세 페이지 링크인지 확인하거나, 사진을 저장해 직접 올려 주세요.',
   unknown: '알 수 없는 문제가 생겼어요. 다시 시도해 주세요.',
 };
 

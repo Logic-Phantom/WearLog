@@ -1,0 +1,53 @@
+diff --git a/node_modules/expo-share-intent/android/src/main/java/expo/modules/shareintent/ExpoShareIntentModule.kt b/node_modules/expo-share-intent/android/src/main/java/expo/modules/shareintent/ExpoShareIntentModule.kt
+index ff5b100..ee438d2 100644
+--- a/node_modules/expo-share-intent/android/src/main/java/expo/modules/shareintent/ExpoShareIntentModule.kt
++++ b/node_modules/expo-share-intent/android/src/main/java/expo/modules/shareintent/ExpoShareIntentModule.kt
+@@ -66,13 +66,22 @@ class ExpoShareIntentModule : Module() {
+                     "filePath" to instance?.getAbsolutePath(uri),
+                 )
+             }
+-            val queryResult: Cursor = resolver.query(uri, null, null, null, null)!!
+-            queryResult.moveToFirst()
+-            val fileName = queryResult.getString(queryResult.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+-            val fileSize = queryResult.getString(queryResult.getColumnIndex(OpenableColumns.SIZE))
+-            queryResult.close()
++            // WearLog patch: a provider may return no row / no type, or deny access — never crash.
++            var fileName: String? = null
++            var fileSize: String? = null
++            resolver.query(uri, null, null, null, null)?.use { queryResult ->
++                if (queryResult.moveToFirst()) {
++                    val nameIdx = queryResult.getColumnIndex(OpenableColumns.DISPLAY_NAME)
++                    val sizeIdx = queryResult.getColumnIndex(OpenableColumns.SIZE)
++                    if (nameIdx >= 0) fileName = queryResult.getString(nameIdx)
++                    if (sizeIdx >= 0) fileSize = queryResult.getString(sizeIdx)
++                }
++            }
+ 
+-            val mimeType = resolver.getType(uri)!!
++            val resolvedType = resolver.getType(uri)
++            // Nothing readable at all (no row, no type): report it as an error instead of a bogus file.
++            if (fileName == null && resolvedType == null) throw IllegalStateException("unreadable shared uri")
++            val mimeType = resolvedType ?: "application/octet-stream"
+ 
+             var mediaWidth: String? = null;
+             var mediaHeight: String? = null;
+@@ -142,14 +151,17 @@ class ExpoShareIntentModule : Module() {
+                 if (intent.action == Intent.ACTION_SEND) {
+                     val uri = intent.parcelable<Uri>(Intent.EXTRA_STREAM);
+                     if (uri != null) {
+-                        notifyShareIntent(mapOf( "files" to arrayOf(getFileInfo(uri), "type" to "file")))
++                        val info = try { getFileInfo(uri) } catch (e: Exception) { notifyError("Cannot read shared file: " + e.javaClass.simpleName); return }
++                        notifyShareIntent(mapOf( "files" to arrayOf(info, "type" to "file")))
+                     } else {
+                         notifyError("empty uri for file sharing: " + intent.action)
+                     }
+                 } else if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
+                     val uris = intent.parcelableArrayList<Uri>(Intent.EXTRA_STREAM)
+                     if (uris != null) {
+-                        notifyShareIntent(mapOf( "files" to uris.map { getFileInfo(it) }, "type" to "file"))
++                        val infos = uris.mapNotNull { try { getFileInfo(it) } catch (e: Exception) { null } }
++                        if (infos.isEmpty()) { notifyError("Cannot read shared files"); return }
++                        notifyShareIntent(mapOf( "files" to infos, "type" to "file"))
+                     } else {
+                         notifyError("empty uris array for file sharing: " + intent.action)
+                     }

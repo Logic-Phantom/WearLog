@@ -11,7 +11,9 @@ import { SAMPLE_TEMPLATES, getTemplate } from '@/features/sample-wardrobe/catalo
 import { ItemVisual } from '@/features/outfit-builder/components/ItemVisual';
 import { SAMPLE_PRESETS } from '@/features/sample-wardrobe/presets';
 
-const CATS = GARMENT_CATEGORIES.filter((c) => SAMPLE_TEMPLATES.some((t) => t.category === c.id));
+/** Photo samples only — the legacy vector templates stay in the catalog as image fallbacks. */
+const PHOTO_SAMPLES = SAMPLE_TEMPLATES.filter((t) => t.photo);
+const CATS = GARMENT_CATEGORIES.filter((c) => PHOTO_SAMPLES.some((t) => t.category === c.id));
 const EMPTY_OWNED = new Map();
 
 /**
@@ -22,7 +24,7 @@ export default function SampleWardrobeScreen() {
   const router = useRouter();
   const c = useColors();
   const params = useLocalSearchParams<{ templateId?: string }>();
-  const initial = (params.templateId && getTemplate(params.templateId)) || SAMPLE_TEMPLATES[0];
+  const initial = (params.templateId && getTemplate(params.templateId)) || PHOTO_SAMPLES[0];
   const [tab, setTab] = useState<'items' | 'presets'>('items');
   const [cat, setCat] = useState<GarmentCategory>(initial.category);
   const [templateId, setTemplateId] = useState(initial.id);
@@ -30,7 +32,7 @@ export default function SampleWardrobeScreen() {
   const [custom, setCustom] = useState<SampleCustomization>({ colorId: t.defaultColorId, fit: t.supportedFits[0], pattern: t.supportedPatterns[0] });
   const [picked, setPicked] = useState<{ itemRef: ItemRef; category: string }[]>([]);
 
-  const templates = SAMPLE_TEMPLATES.filter((x) => x.category === cat);
+  const templates = PHOTO_SAMPLES.filter((x) => x.category === cat);
   const swatches = useMemo(() => GARMENT_COLORS.filter((g) => t.supportedColorIds.includes(g.id)).map((g) => ({ ...g, isLight: g.luminanceGroup === 2 })), [t]);
 
   const selectTemplate = (id: string) => {
@@ -54,7 +56,7 @@ export default function SampleWardrobeScreen() {
         />
         {tab === 'items' ? (
           <>
-            <ChipRow options={CATS} value={cat} onChange={(id) => (setCat(id), selectTemplate(SAMPLE_TEMPLATES.find((x) => x.category === id)!.id))} />
+            <ChipRow options={CATS} value={cat} onChange={(id) => (setCat(id), selectTemplate(PHOTO_SAMPLES.find((x) => x.category === id)!.id))} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs }}>
               {templates.map((x) => (
                 <Pressable key={x.id} onPress={() => selectTemplate(x.id)} accessibilityRole="button" accessibilityState={{ selected: x.id === templateId }} accessibilityLabel={x.nameKo} style={[styles.thumb, { backgroundColor: c.photoBackdrop, borderColor: x.id === templateId ? c.textPrimary : 'transparent' }]}>
