@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
-import { AppText, DangerButton, EmptyState, GhostButton, InlineMessage, PrimaryButton, ScreenScroll, SecondaryButton, SocialSignInButton, TextField, Wordmark, spacing } from '@/design-system';
+import { AppText, DangerButton, GhostButton, InlineMessage, PrimaryButton, Row, ScreenScroll, SecondaryButton, SocialSignInButton, TextField, Wordmark, spacing } from '@/design-system';
 import { toUserMessage } from '@/domain/errors';
 import type { SocialProviderId } from '@/features/auth/social-auth';
 import { validateHandle } from '@/features/community/moderation-policy';
@@ -25,14 +25,7 @@ export default function AccountScreen() {
   const [code, setCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [handle, setHandle] = useState('');
-
-  if (!configured) {
-    return (
-      <ScreenScroll>
-        <EmptyState icon="cloud-offline-outline" title="커뮤니티 서버 미설정" message="로그인은 커뮤니티용 선택 기능이에요. 옷장·코디·기록은 지금 그대로 쓸 수 있어요." actionLabel="돌아가기" onAction={() => router.back()} />
-      </ScreenScroll>
-    );
-  }
+  const [emailOpen, setEmailOpen] = useState(false);
 
   const run = async (kind: typeof busy, fn: () => Promise<unknown>) => {
     setBusy(kind);
@@ -79,27 +72,45 @@ export default function AccountScreen() {
 
   const enabled = providers.data ?? [];
   return (
-    <ScreenScroll>
-      <View style={{ paddingVertical: spacing.xl }}>
-        <Wordmark tagline="로그인하고 더 많은 기능을 이용해보세요" />
+    <ScreenScroll contentContainerStyle={{ padding: spacing.lg, gap: spacing.sm, paddingTop: spacing.xxl * 2, paddingBottom: spacing.xxl }}>
+      <View style={{ paddingBottom: spacing.xxl, gap: spacing.xs }}>
+        <Wordmark />
+        <AppText variant="secondary" tone="secondary" align="center">
+          {'로그인하고 더 많은 기능을\n이용해보세요'}
+        </AppText>
       </View>
       {(['kakao', 'google'] as const).map((p) => (
-        <SocialSignInButton key={p} provider={p} disabled={!enabled.includes(p)} loading={busy === p} onPress={() => run(p, () => communityRepository.signInWithProvider(p))} />
+        <SocialSignInButton key={p} provider={p} disabled={!configured || !enabled.includes(p)} loading={busy === p} onPress={() => run(p, () => communityRepository.signInWithProvider(p))} />
       ))}
-      {!providers.loading && enabled.length < 2 ? <AppText variant="caption" tone="tertiary" align="center">비활성화된 버튼은 서버에서 아직 설정되지 않은 로그인 방식이에요.</AppText> : null}
+      <SecondaryButton label="이메일로 시작하기" onPress={() => setEmailOpen((v) => !v)} disabled={!configured} />
+      {!configured ? (
+        <AppText variant="caption" tone="tertiary" align="center">
+          커뮤니티 서버가 아직 연결되지 않아 로그인할 수 없어요. 옷장·코디·기록은 로그인 없이 그대로 쓸 수 있어요.
+        </AppText>
+      ) : !providers.loading && enabled.length < 2 ? (
+        <AppText variant="caption" tone="tertiary" align="center">비활성화된 버튼은 서버에서 아직 설정되지 않은 로그인 방식이에요.</AppText>
+      ) : null}
 
-      <View style={{ gap: spacing.xs, marginTop: spacing.md }}>
-        <TextField label="이메일로 시작하기" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="you@example.com" />
-        {codeSent ? <TextField label="인증 코드" value={code} onChangeText={setCode} keyboardType="number-pad" /> : null}
-        <SecondaryButton
-          label={codeSent ? '코드 확인' : '인증 코드 받기'}
-          loading={busy === 'email'}
-          disabled={!email.includes('@') || (codeSent && code.length < 6)}
-          onPress={() => run('email', () => (codeSent ? communityRepository.verifyEmailCode(email, code) : communityRepository.sendEmailCode(email).then(() => setCodeSent(true))))}
-        />
-      </View>
+      {emailOpen && configured ? (
+        <View style={{ gap: spacing.xs, marginTop: spacing.sm }}>
+          <TextField label="이메일" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="you@example.com" />
+          {codeSent ? <TextField label="인증 코드" value={code} onChangeText={setCode} keyboardType="number-pad" /> : null}
+          <PrimaryButton
+            label={codeSent ? '코드 확인' : '인증 코드 받기'}
+            loading={busy === 'email'}
+            disabled={!email.includes('@') || (codeSent && code.length < 6)}
+            onPress={() => run('email', () => (codeSent ? communityRepository.verifyEmailCode(email, code) : communityRepository.sendEmailCode(email).then(() => setCodeSent(true))))}
+          />
+        </View>
+      ) : null}
       {error ? <InlineMessage tone="error" message={error} /> : null}
-      <GhostButton label="로그인 없이 계속 쓰기" onPress={() => router.back()} />
+      <Row style={{ justifyContent: 'center', marginTop: spacing.lg }} gap={6}>
+        <AppText variant="caption" tone="tertiary">계정이 없으신가요?</AppText>
+        <Pressable onPress={() => setEmailOpen(true)} disabled={!configured} hitSlop={8} accessibilityRole="button">
+          <AppText variant="caption" style={{ textDecorationLine: 'underline' }}>회원가입</AppText>
+        </Pressable>
+      </Row>
+      <GhostButton label="로그인 없이 계속 쓰기" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
     </ScreenScroll>
   );
 }

@@ -68,6 +68,11 @@ export interface SampleGarmentTemplate {
   styleTags: StyleTag[];
   seasonTags: Season[];
   outerWeight?: OuterWeight;
+  /**
+   * Photo sample (showcase-derived image keys). `tile` = square photo on its backdrop (grids),
+   * `cutout` = backdrop removed (canvas/flat-lay). Photo samples only offer their photographed color.
+   */
+  photo?: { tile: string; cutout?: string };
   assetVersion: number;
 }
 

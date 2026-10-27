@@ -17,8 +17,8 @@
     "android": {
       "package": "app.wearlog.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#F6F5F2",
-        "foregroundImage": "./assets/images/icon.png"
+        "backgroundColor": "#FDFBF7",
+        "foregroundImage": "./assets/images/adaptive-icon.png"
       },
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
@@ -39,19 +39,19 @@
       "name": "WearLog",
       "shortName": "WearLog",
       "themeColor": "#1A1A1A",
-      "backgroundColor": "#F6F5F2"
+      "backgroundColor": "#F8F7F4"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F6F5F2",
-          "image": "./assets/images/icon.png",
-          "imageWidth": 120,
+          "backgroundColor": "#FDFBF7",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 160,
           "dark": {
             "backgroundColor": "#111111",
-            "image": "./assets/images/icon.png"
+            "image": "./assets/images/splash-icon.png"
           }
         }
       ],

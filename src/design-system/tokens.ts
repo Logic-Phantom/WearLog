@@ -38,6 +38,10 @@ export interface ColorTokens {
   weatherFrom: string;
   weatherTo: string;
   weatherText: string;
+  /** Rain-cloud / weather glyph tint on the weather card. */
+  weatherIcon: string;
+  /** Bottom tab bar: inactive icon/label. */
+  tabInactive: string;
   /** Source badges: 샘플 vs 내 옷 (always paired with a text label). */
   badgeSampleBg: string;
   badgeSampleText: string;
@@ -51,11 +55,14 @@ export const brandButtons = {
   google: { background: '#FFFFFF', text: '#1F1F1F', border: '#DADCE0' },
 } as const;
 
+/** Splash over the hanger-rack photo: fixed light palette in both themes (the photo is light). */
+export const splashColors = { wall: '#ECEAE6', wallClear: 'rgba(236,234,230,0)', wallFade: 'rgba(236,234,230,0.95)', ink: '#1A1A1A', onInk: '#FFFFFF', sub: '#3A3A38', glass: 'rgba(255,255,255,0.55)' } as const;
+
 export const lightColors: ColorTokens = {
-  background: '#F6F5F2',
+  background: '#F8F7F4',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
-  surfaceSunken: '#EFEEEA',
+  surfaceSunken: '#F1F0EC',
   textPrimary: '#1A1A1A',
   textSecondary: '#5E5E5B',
   textTertiary: '#8C8C88',
@@ -76,9 +83,11 @@ export const lightColors: ColorTokens = {
   heart: '#E5484D',
   scrim: 'rgba(0,0,0,0.45)',
   photoBackdrop: '#F1F0EC',
-  weatherFrom: '#EAF3FB',
-  weatherTo: '#D9E8F6',
-  weatherText: '#1D3A55',
+  weatherFrom: '#EEF5FB',
+  weatherTo: '#DCEAF6',
+  weatherText: '#1A1A1A',
+  weatherIcon: '#9FB6CB',
+  tabInactive: '#8C8C88',
   badgeSampleBg: '#EDECE8',
   badgeSampleText: '#5E5E5B',
   badgeOwnedBg: '#1A1A1A',
@@ -114,6 +123,8 @@ export const darkColors: ColorTokens = {
   weatherFrom: '#1B2834',
   weatherTo: '#16222D',
   weatherText: '#D4E5F5',
+  weatherIcon: '#8FA9C2',
+  tabInactive: '#83827E',
   badgeSampleBg: '#2A2A28',
   badgeSampleText: '#AEADA8',
   badgeOwnedBg: '#F3F2EF',
@@ -187,6 +198,9 @@ export const typography = {
 export const touchTarget = 44;
 
 export const bottomBarMaxHeight = 96;
+
+/** Custom bottom tab bar content height (excluding the safe-area inset). */
+export const tabBarHeight = 58;
 
 /** Content column cap so cards don't grow huge on tablets / the web preview. */
 export const contentMaxWidth = 640;

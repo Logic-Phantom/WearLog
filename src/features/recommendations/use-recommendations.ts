@@ -14,7 +14,8 @@ import { candidatePool, ownedToRecItem } from './rec-items';
 export type RecommendMode = 'ownedOnly' | 'withSamples';
 
 /** Wires local data + taste + weather into the pure engine. No network involved. */
-export function useRecommendations(opts: { mode: RecommendMode; occasion: Occasion | null; excludedKeys: string[]; pinnedKeys: string[] }) {
+/** `focus: 'taste'` (취향 맞춤) scores without weather; `'weather'` (날씨 맞춤, default) uses it when enabled. */
+export function useRecommendations(opts: { mode: RecommendMode; occasion: Occasion | null; excludedKeys: string[]; pinnedKeys: string[]; focus?: 'weather' | 'taste' }) {
   const { taste, weatherContext, weatherPrefs, dataVersion } = useAppState();
   const owned = useAsync(async () => {
     const [items, stats] = await Promise.all([listGarments(), garmentWearStats()]);
@@ -32,12 +33,12 @@ export function useRecommendations(opts: { mode: RecommendMode; occasion: Occasi
       taste,
       occasion: opts.occasion,
       weather,
-      weatherEnabled: weatherPrefs.weatherRecommendationEnabled,
+      weatherEnabled: weatherPrefs.weatherRecommendationEnabled && opts.focus !== 'taste',
       excludedKeys: opts.excludedKeys,
       pinnedKeys: opts.pinnedKeys,
       recentOutfitSignatures: [],
     });
-  }, [owned.data, opts.mode, opts.occasion, opts.excludedKeys, opts.pinnedKeys, taste, weather, weatherPrefs.weatherRecommendationEnabled]);
+  }, [owned.data, opts.mode, opts.occasion, opts.excludedKeys, opts.pinnedKeys, opts.focus, taste, weather, weatherPrefs.weatherRecommendationEnabled]);
 
   return { result, ownedMap, ownedCount: owned.data?.items.length ?? 0, loading: owned.loading, error: owned.error, weather };
 }

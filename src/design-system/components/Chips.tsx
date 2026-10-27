@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { tapFeedback } from '../haptics';
@@ -6,7 +5,7 @@ import { useColors } from '../theme';
 import { radius, spacing, touchTarget } from '../tokens';
 import { AppText } from './AppText';
 
-/** Pill filter chip (옷장 카테고리: 전체/상의/하의/…). Selected = ink fill + check, not color alone. */
+/** Pill filter chip (옷장 카테고리: 전체/상의/하의/…). Selected = ink fill + bold label (fill change, not hue alone). */
 export function FilterChip({ label, selected, onPress, testID }: { label: string; selected: boolean; onPress: () => void; testID?: string }) {
   const c = useColors();
   return (
@@ -20,9 +19,8 @@ export function FilterChip({ label, selected, onPress, testID }: { label: string
       accessibilityLabel={label}
       accessibilityState={{ selected }}
       hitSlop={{ top: 4, bottom: 4 }}
-      style={[styles.chip, { backgroundColor: selected ? c.selected : c.surface, borderColor: selected ? c.selected : c.border }]}>
-      {selected ? <Ionicons name="checkmark" size={14} color={c.selectedText} /> : null}
-      <AppText variant="label" style={{ color: selected ? c.selectedText : c.textSecondary }}>
+      style={[styles.chip, { backgroundColor: selected ? c.selected : c.surfaceSunken, borderColor: selected ? c.selected : c.surfaceSunken }]}>
+      <AppText variant={selected ? 'label' : 'secondary'} style={{ color: selected ? c.selectedText : c.textSecondary }}>
         {label}
       </AppText>
     </Pressable>
@@ -88,8 +86,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    minHeight: 36,
-    paddingHorizontal: spacing.sm,
+    minHeight: 34,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.chip,
     borderWidth: 1,
   },

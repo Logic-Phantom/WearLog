@@ -13,3 +13,5 @@ export * from './components/Feedback';
 export * from './components/Layout';
 export * from './components/ListRow';
 export * from './components/TextField';
+export * from './components/Showcase';
+export * from './components/TabIcons';

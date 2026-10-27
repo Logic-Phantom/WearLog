@@ -57,7 +57,52 @@ const templates: T[] = [
   { id: 'scarf', nameKo: '스카프', category: 'accessory', subcategory: 'scarf', shapeId: 'scarf', defaultColorId: 'burgundy', supportedColorIds: ALL, supportedFits: [], supportedPatterns: ['solid', 'check'], styleTags: ['classic'], seasonTags: ['fall', 'winter'] },
 ];
 
-export const SAMPLE_TEMPLATES: readonly SampleGarmentTemplate[] = templates.map((t) => ({ ...t, assetVersion: 1 }));
+/**
+ * Photo samples cut from the user-provided showcase board (assets/showcase, docs/SAMPLE_CATALOG.md).
+ * One photographed color each; `shapeId` is the vector fallback if an image ever fails to load.
+ */
+type P = Omit<T, 'supportedColorIds' | 'supportedFits' | 'supportedPatterns'> & { photo: { tile: string; cutout?: string } };
+const photo = (p: P): T => ({ ...p, supportedColorIds: [p.defaultColorId], supportedFits: [], supportedPatterns: ['solid'] });
+
+const photoTemplates: T[] = [
+  // 상의
+  photo({ id: 'ph-sweater-gray', nameKo: '그레이 니트 스웨터', category: 'top', subcategory: 'knit', shapeId: 'knit', defaultColorId: 'gray', styleTags: ['minimal', 'casual'], seasonTags: ['fall', 'winter'], photo: { tile: 'a-sweater-gray', cutout: 'a-sweater-gray-cut' } }),
+  photo({ id: 'ph-tee-white', nameKo: '화이트 반팔 티', category: 'top', subcategory: 'tshirt', shapeId: 'tee', defaultColorId: 'white', styleTags: ['casual', 'minimal', 'street'], seasonTags: ['spring', 'summer'], photo: { tile: 'b-tee-white', cutout: 'b-tee-white-cut' } }),
+  photo({ id: 'ph-knit-cream', nameKo: '크림 반팔 니트', category: 'top', subcategory: 'knit', shapeId: 'knit', defaultColorId: 'cream', styleTags: ['minimal', 'classic'], seasonTags: ['spring', 'fall'], photo: { tile: 'f-knit-cream', cutout: 'f-knit-cream-cut' } }),
+  photo({ id: 'ph-sweat-gray', nameKo: '그레이 맨투맨', category: 'top', subcategory: 'sweatshirt', shapeId: 'knit', defaultColorId: 'gray', styleTags: ['casual', 'street'], seasonTags: ['spring', 'fall', 'winter'], photo: { tile: 'w-sweat-gray', cutout: 'w-sweat-gray-cut' } }),
+  photo({ id: 'ph-knit-black', nameKo: '블랙 니트', category: 'top', subcategory: 'knit', shapeId: 'knit', defaultColorId: 'black', styleTags: ['minimal', 'classic'], seasonTags: ['fall', 'winter'], photo: { tile: 'w-knit-black', cutout: 'w-knit-black-cut' } }),
+  photo({ id: 'ph-knit-white', nameKo: '화이트 니트', category: 'top', subcategory: 'knit', shapeId: 'knit', defaultColorId: 'cream', styleTags: ['minimal', 'casual'], seasonTags: ['fall', 'winter'], photo: { tile: 'w-knit-white' } }),
+  // 하의
+  photo({ id: 'ph-jeans-wide', nameKo: '와이드 데님', category: 'bottom', subcategory: 'jeans', shapeId: 'pants', defaultColorId: 'denimBlue', styleTags: ['casual', 'street', 'cityboy'], seasonTags: ['spring', 'summer', 'fall', 'winter'], photo: { tile: 'b-jeans-wide', cutout: 'b-jeans-wide-cut' } }),
+  photo({ id: 'ph-denim-wide', nameKo: '데님 팬츠', category: 'bottom', subcategory: 'jeans', shapeId: 'pants', defaultColorId: 'denimBlue', styleTags: ['casual', 'street'], seasonTags: ['spring', 'fall', 'winter'], photo: { tile: 'l-denim-wide', cutout: 'l-denim-wide-cut' } }),
+  photo({ id: 'ph-jeans-indigo', nameKo: '인디고 데님', category: 'bottom', subcategory: 'jeans', shapeId: 'pants', defaultColorId: 'navy', styleTags: ['casual', 'classic', 'cityboy'], seasonTags: ['spring', 'fall', 'winter'], photo: { tile: 'w-jeans-indigo', cutout: 'w-jeans-indigo-cut' } }),
+  photo({ id: 'ph-jeans-light', nameKo: '라이트 그레이 데님', category: 'bottom', subcategory: 'jeans', shapeId: 'pants', defaultColorId: 'gray', styleTags: ['casual', 'street'], seasonTags: ['spring', 'summer', 'fall'], photo: { tile: 'w-jeans-light', cutout: 'w-jeans-light-cut' } }),
+  photo({ id: 'ph-cargo-khaki', nameKo: '카키 카고 팬츠', category: 'bottom', subcategory: 'cargo', shapeId: 'cargo', defaultColorId: 'olive', styleTags: ['street', 'gorpcore', 'workwear'], seasonTags: ['spring', 'fall'], photo: { tile: 'f-cargo-khaki', cutout: 'f-cargo-khaki-cut' } }),
+  photo({ id: 'ph-pants-black', nameKo: '블랙 와이드 팬츠', category: 'bottom', subcategory: 'slacks', shapeId: 'pants', defaultColorId: 'black', styleTags: ['minimal', 'classic', 'cityboy'], seasonTags: ['spring', 'fall', 'winter'], photo: { tile: 'f-pants-black', cutout: 'f-pants-black-cut' } }),
+  // 아우터
+  photo({ id: 'ph-trench-beige', nameKo: '베이지 트렌치 코트', category: 'outer', subcategory: 'coat', shapeId: 'coat', defaultColorId: 'beige', styleTags: ['classic', 'minimal'], seasonTags: ['spring', 'fall'], outerWeight: 'medium', photo: { tile: 'w-trench-beige' } }),
+  photo({ id: 'ph-trucker-black', nameKo: '블랙 트러커 재킷', category: 'outer', subcategory: 'jacket', shapeId: 'jacket', defaultColorId: 'black', styleTags: ['street', 'casual'], seasonTags: ['spring', 'fall'], outerWeight: 'light', photo: { tile: 'b-jacket-black', cutout: 'b-jacket-black-cut' } }),
+  photo({ id: 'ph-jacket-navy', nameKo: '네이비 워크 재킷', category: 'outer', subcategory: 'jacket', shapeId: 'jacket', defaultColorId: 'navy', styleTags: ['workwear', 'cityboy', 'casual'], seasonTags: ['spring', 'fall', 'winter'], outerWeight: 'medium', photo: { tile: 'f-jacket-black', cutout: 'f-jacket-black-cut' } }),
+  photo({ id: 'ph-zip-black', nameKo: '블랙 집업 재킷', category: 'outer', subcategory: 'jacket', shapeId: 'jacket', defaultColorId: 'black', styleTags: ['street', 'minimal'], seasonTags: ['spring', 'fall'], outerWeight: 'light', photo: { tile: 'l-jacket-black', cutout: 'l-jacket-black-cut' } }),
+  photo({ id: 'ph-fleece-charcoal', nameKo: '차콜 플리스 집업', category: 'outer', subcategory: 'jacket', shapeId: 'jacket', defaultColorId: 'charcoal', styleTags: ['gorpcore', 'casual'], seasonTags: ['fall', 'winter'], outerWeight: 'medium', photo: { tile: 'w-fleece-charcoal', cutout: 'w-fleece-charcoal-cut' } }),
+  photo({ id: 'ph-coverall', nameKo: '워크 점프수트', category: 'onepiece', subcategory: 'jumpsuit', shapeId: 'coat', defaultColorId: 'charcoal', styleTags: ['workwear', 'street'], seasonTags: ['spring', 'fall'], photo: { tile: 'w-coverall-charcoal', cutout: 'w-coverall-charcoal-cut' } }),
+  // 신발
+  photo({ id: 'ph-sneakers-white', nameKo: '화이트 스니커즈', category: 'shoes', subcategory: 'sneakers', shapeId: 'sneaker', defaultColorId: 'white', styleTags: ['casual', 'street', 'minimal', 'sporty'], seasonTags: ['spring', 'summer', 'fall', 'winter'], photo: { tile: 'b-sneakers-white', cutout: 'b-sneakers-white-cut' } }),
+  photo({ id: 'ph-sneakers-bw', nameKo: '블랙 스니커즈', category: 'shoes', subcategory: 'sneakers', shapeId: 'sneaker', defaultColorId: 'black', styleTags: ['street', 'casual', 'sporty'], seasonTags: ['spring', 'summer', 'fall', 'winter'], photo: { tile: 'f-sneakers-bw', cutout: 'f-sneakers-bw-cut' } }),
+  photo({ id: 'ph-shoes-black', nameKo: '블랙 레더 슈즈', category: 'shoes', subcategory: 'loafers', shapeId: 'loafer', defaultColorId: 'black', styleTags: ['classic', 'minimal', 'cityboy'], seasonTags: ['spring', 'fall', 'winter'], photo: { tile: 'w-shoes-black', cutout: 'w-shoes-black-cut' } }),
+  photo({ id: 'ph-chunky-black', nameKo: '블랙 청키 슈즈', category: 'shoes', subcategory: 'sneakers', shapeId: 'sneaker', defaultColorId: 'black', styleTags: ['street', 'gorpcore'], seasonTags: ['fall', 'winter'], photo: { tile: 'w-chunky-black', cutout: 'w-chunky-black-cut' } }),
+  photo({ id: 'ph-sneakers-brown', nameKo: '레트로 러닝화', category: 'shoes', subcategory: 'sneakers', shapeId: 'sneaker', defaultColorId: 'brown', styleTags: ['gorpcore', 'sporty', 'casual'], seasonTags: ['spring', 'summer', 'fall'], photo: { tile: 'w-sneakers-brown', cutout: 'w-sneakers-brown-cut' } }),
+  // 액세서리
+  photo({ id: 'ph-cap-black', nameKo: '블랙 볼캡', category: 'hat', subcategory: 'cap', shapeId: 'cap', defaultColorId: 'black', styleTags: ['street', 'casual', 'sporty'], seasonTags: ['spring', 'summer', 'fall'], photo: { tile: 'b-cap-black', cutout: 'b-cap-black-cut' } }),
+  photo({ id: 'ph-cap-gray', nameKo: '그레이 볼캡', category: 'hat', subcategory: 'cap', shapeId: 'cap', defaultColorId: 'gray', styleTags: ['casual', 'gorpcore'], seasonTags: ['spring', 'summer', 'fall'], photo: { tile: 'f-cap-gray', cutout: 'f-cap-gray-cut' } }),
+  photo({ id: 'ph-bag-black', nameKo: '블랙 토트백', category: 'bag', subcategory: 'tote', shapeId: 'tote', defaultColorId: 'black', styleTags: ['minimal', 'casual'], seasonTags: ['spring', 'summer', 'fall', 'winter'], photo: { tile: 'b-bag-black', cutout: 'b-bag-black-cut' } }),
+];
+
+/** Photo samples first (showcase look), then the editable vector templates. */
+export const SAMPLE_TEMPLATES: readonly SampleGarmentTemplate[] = [...photoTemplates, ...templates].map((t) => ({ ...t, assetVersion: 1 }));
+
+/** Samples offered by "샘플 포함" recommendations: photo samples only, so outfits read like the showcase. */
+export const RECOMMENDABLE_SAMPLES: readonly SampleGarmentTemplate[] = SAMPLE_TEMPLATES.filter((t) => t.photo);
 
 const BY_ID = new Map(SAMPLE_TEMPLATES.map((t) => [t.id, t]));
 

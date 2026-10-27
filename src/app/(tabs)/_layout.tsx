@@ -1,32 +1,37 @@
-import { NativeTabs } from 'expo-router/native-tabs';
+import { Tabs } from 'expo-router/js-tabs';
+import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fonts, useColors } from '@/design-system';
+import { TabIcon, fonts, tabBarHeight, useColors, type TabIconName } from '@/design-system';
 
-/** Tab order follows the showcase: 홈 · 커뮤니티 · 코디추천 · 옷장 · 프로필 (D-005). */
+const icon = (name: TabIconName, cutout: string) =>
+  function Icon({ color, focused }: { color: ColorValue; focused: boolean }) {
+    return <TabIcon name={name} color={String(color)} focused={focused} cutout={cutout} />;
+  };
+
+/**
+ * Tab order follows the showcase: 홈 · 커뮤니티 · 코디추천 · 옷장 · 프로필 (D-005).
+ * JS tabs with self-drawn line icons on every platform so Android/iOS match the showcase bar (D-014).
+ */
 export default function TabsLayout() {
   const c = useColors();
+  const insets = useSafeAreaInsets();
   return (
-    <NativeTabs backgroundColor={c.surface} tintColor={c.accent} labelVisibilityMode="labeled" labelStyle={{ default: { fontFamily: fonts.medium }, selected: { color: c.accent, fontFamily: fonts.semibold } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>홈</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="community">
-        <NativeTabs.Trigger.Label>커뮤니티</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} md="group" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="recommend">
-        <NativeTabs.Trigger.Label>코디추천</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'sparkles', selected: 'sparkles' }} md="auto_awesome" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="wardrobe">
-        <NativeTabs.Trigger.Label>옷장</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'cabinet', selected: 'cabinet.fill' }} md="checkroom" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="me">
-        <NativeTabs.Trigger.Label>프로필</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'person', selected: 'person.fill' }} md="person" />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: c.textPrimary,
+        tabBarInactiveTintColor: c.tabInactive,
+        tabBarStyle: { backgroundColor: c.surface, borderTopColor: c.border, height: tabBarHeight + insets.bottom, paddingTop: 6 },
+        tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 10, marginTop: 2 },
+        tabBarItemStyle: { paddingVertical: 2 },
+        sceneStyle: { backgroundColor: c.background },
+      }}>
+      <Tabs.Screen name="index" options={{ title: '홈', tabBarIcon: icon('home', c.surface) }} />
+      <Tabs.Screen name="community" options={{ title: '커뮤니티', tabBarIcon: icon('community', c.surface) }} />
+      <Tabs.Screen name="recommend" options={{ title: '코디추천', tabBarIcon: icon('recommend', c.surface) }} />
+      <Tabs.Screen name="wardrobe" options={{ title: '옷장', tabBarIcon: icon('wardrobe', c.surface) }} />
+      <Tabs.Screen name="me" options={{ title: '프로필', tabBarIcon: icon('profile', c.surface) }} />
+    </Tabs>
   );
 }

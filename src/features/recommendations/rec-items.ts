@@ -1,5 +1,5 @@
 import type { GarmentItem, SampleGarmentTemplate } from '@/domain/models';
-import { SAMPLE_TEMPLATES } from '@/features/sample-wardrobe/catalog';
+import { RECOMMENDABLE_SAMPLES } from '@/features/sample-wardrobe/catalog';
 
 import type { RecItem } from './engine';
 
@@ -43,5 +43,5 @@ export function sampleToRecItem(t: SampleGarmentTemplate): RecItem {
  * opt-in and keeps each item's provenance in its `ref` (prompt §3.5).
  */
 export function candidatePool(mode: 'ownedOnly' | 'withSamples', owned: RecItem[]): RecItem[] {
-  return mode === 'ownedOnly' ? owned : [...owned, ...SAMPLE_TEMPLATES.map(sampleToRecItem)];
+  return mode === 'ownedOnly' ? owned : [...owned, ...RECOMMENDABLE_SAMPLES.map(sampleToRecItem)];
 }

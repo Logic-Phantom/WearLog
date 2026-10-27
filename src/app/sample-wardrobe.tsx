@@ -8,7 +8,7 @@ import type { ItemRef, SampleCustomization } from '@/domain/models';
 import { GARMENT_COLORS, type ColorId } from '@/domain/palette';
 import { OutfitBoard } from '@/features/outfit-builder/components/OutfitBoard';
 import { SAMPLE_TEMPLATES, getTemplate } from '@/features/sample-wardrobe/catalog';
-import { GarmentVector } from '@/features/sample-wardrobe/components/GarmentVector';
+import { ItemVisual } from '@/features/outfit-builder/components/ItemVisual';
 import { SAMPLE_PRESETS } from '@/features/sample-wardrobe/presets';
 
 const CATS = GARMENT_CATEGORIES.filter((c) => SAMPLE_TEMPLATES.some((t) => t.category === c.id));
@@ -58,7 +58,7 @@ export default function SampleWardrobeScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs }}>
               {templates.map((x) => (
                 <Pressable key={x.id} onPress={() => selectTemplate(x.id)} accessibilityRole="button" accessibilityState={{ selected: x.id === templateId }} accessibilityLabel={x.nameKo} style={[styles.thumb, { backgroundColor: c.photoBackdrop, borderColor: x.id === templateId ? c.textPrimary : 'transparent' }]}>
-                  <GarmentVector shapeId={x.shapeId} colorId={x.defaultColorId} fit={x.supportedFits[0]} pattern={x.supportedPatterns[0]} size={56} />
+                  <ItemVisual itemRef={{ kind: 'sampleTemplate', templateId: x.id, customization: { colorId: x.defaultColorId, fit: x.supportedFits[0], pattern: x.supportedPatterns[0] } }} size={56} />
                   <AppText variant="caption" numberOfLines={1}>{x.nameKo}</AppText>
                 </Pressable>
               ))}
@@ -67,13 +67,13 @@ export default function SampleWardrobeScreen() {
             <Card>
               <View style={{ gap: spacing.md }}>
                 <View style={[styles.preview, { backgroundColor: c.photoBackdrop }]}>
-                  <GarmentVector shapeId={t.shapeId} colorId={custom.colorId} fit={custom.fit} pattern={custom.pattern} size={200} accessibilityLabel={`샘플 ${t.nameKo} 미리보기`} />
+                  <ItemVisual itemRef={{ kind: 'sampleTemplate', templateId: t.id, customization: custom }} size={200} />
                   <View style={{ position: 'absolute', top: spacing.xs, left: spacing.xs }}>
                     <SourceBadge source="sample" />
                   </View>
                 </View>
                 <AppText variant="sectionTitle">{t.nameKo}</AppText>
-                <ColorSwatchRow options={swatches} value={custom.colorId} onChange={(id) => setCustom({ ...custom, colorId: id as ColorId })} />
+                {swatches.length > 1 ? <ColorSwatchRow options={swatches} value={custom.colorId} onChange={(id) => setCustom({ ...custom, colorId: id as ColorId })} /> : <AppText variant="caption" tone="tertiary">사진 샘플은 촬영된 색상 그대로예요</AppText>}
                 {t.supportedFits.length > 1 ? (
                   <ChipRow options={t.supportedFits.map((f) => ({ id: f, label: labelOf(FITS, f) }))} value={custom.fit ?? t.supportedFits[0]} onChange={(f: Fit) => setCustom({ ...custom, fit: f })} />
                 ) : null}
@@ -88,7 +88,7 @@ export default function SampleWardrobeScreen() {
           SAMPLE_PRESETS.map((p) => (
             <Card key={p.id}>
               <View style={{ gap: spacing.sm }}>
-                <OutfitBoard refs={p.items.map((i) => ({ kind: 'sampleTemplate', templateId: i.templateId, customization: i.customization }))} owned={EMPTY_OWNED} height={180} />
+                <OutfitBoard items={p.items.map((i) => ({ ref: { kind: 'sampleTemplate', templateId: i.templateId, customization: i.customization }, category: getTemplate(i.templateId)?.category ?? 'other' }))} owned={EMPTY_OWNED} height={200} />
                 <AppText variant="sectionTitle">{p.title}</AppText>
                 <AppText variant="secondary" tone="secondary">{p.description} · 샘플 코디</AppText>
                 <SecondaryButton

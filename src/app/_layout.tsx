@@ -1,9 +1,10 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { Pressable, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -30,8 +31,8 @@ function OnboardingGate() {
     if (!ready) return;
     SplashScreen.hideAsync().catch(() => {});
     const inOnboarding = segments[0] === 'onboarding';
-    // OAuth deep links must land even before onboarding is done.
-    const inAuth = segments[0] === 'auth';
+    // OAuth deep links (and the splash's 로그인 button) must land even before onboarding is done.
+    const inAuth = segments[0] === 'auth' || segments[0] === 'community';
     if (needsOnboarding(taste) && !inOnboarding && !inAuth) router.replace('/onboarding');
   }, [ready, taste, segments, router]);
 
@@ -54,25 +55,34 @@ export default function RootLayout() {
             <OnboardingGate />
             <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
             <Stack
-              screenOptions={{
+              screenOptions={({ navigation }) => ({
                 headerBackButtonDisplayMode: 'minimal',
                 headerStyle: { backgroundColor: c.background },
                 headerTintColor: c.textPrimary,
-                headerTitleStyle: { fontFamily: fonts.bold },
+                headerTitleStyle: { fontFamily: fonts.bold, fontSize: 18 },
+                headerTitleAlign: 'left',
                 headerShadowVisible: false,
                 contentStyle: { backgroundColor: c.background },
-              }}>
+                // Showcase: "‹ 옷 등록" — thin chevron + left-aligned title.
+                headerLeft: ({ canGoBack }) =>
+                  canGoBack ? (
+                    <Pressable onPress={() => navigation.goBack()} hitSlop={12} accessibilityRole="button" accessibilityLabel="뒤로" style={{ paddingRight: 8 }}>
+                      <Ionicons name="chevron-back" size={24} color={c.textPrimary} />
+                    </Pressable>
+                  ) : undefined,
+              })}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '홈' }} />
               <Stack.Screen name="onboarding/index" options={{ headerShown: false, gestureEnabled: false }} />
               <Stack.Screen name="onboarding/taste" options={{ title: '취향 설정' }} />
-              <Stack.Screen name="weather" options={{ title: '날씨' }} />
+              <Stack.Screen name="weather" options={{ title: '날씨 상세' }} />
               <Stack.Screen name="sample-wardrobe" options={{ title: '샘플 옷장' }} />
-              <Stack.Screen name="wardrobe/add" options={{ title: '옷 등록', presentation: 'modal' }} />
+              <Stack.Screen name="wardrobe/add" options={{ title: '옷 등록' }} />
               <Stack.Screen name="wardrobe/[itemId]" options={{ title: '옷 상세' }} />
               <Stack.Screen name="builder/[outfitId]" options={{ title: '코디 빌더' }} />
               <Stack.Screen name="wear-log" options={{ title: '착용 기록' }} />
-              <Stack.Screen name="community/account" options={{ title: '로그인' }} />
+              <Stack.Screen name="community/account" options={{ title: '' }} />
               <Stack.Screen name="community/publish" options={{ title: '베스트 착장에 공유', presentation: 'modal' }} />
+              <Stack.Screen name="community/post/[postId]" options={{ title: '' }} />
               <Stack.Screen name="auth/callback" options={{ title: '로그인 중', headerBackVisible: false }} />
               <Stack.Screen name="settings" options={{ title: '설정' }} />
             </Stack>
