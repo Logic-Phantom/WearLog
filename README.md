@@ -4,11 +4,43 @@
 
 로컬 우선 디지털 옷장 앱 (Android + iOS). React Native + Expo SDK 58 + TypeScript strict.
 
-- 옷을 하나도 등록하지 않아도 **샘플 옷장**(자체 제작 벡터 34종, 16색, 프리셋 9개)으로 바로 코디
+- 옷을 하나도 등록하지 않아도 **샘플 옷장**(고해상도 사진 샘플 37종 + 벡터 템플릿 34종, 프리셋 9개)으로 바로 코디
 - 취향 카드 온보딩 → 추천 점수에 실제 반영
-- 기상청 단기예보 기반 날씨(격자 번호만 전송) 또는 직접 고른 날씨로 **이유가 보이는 추천**
-- 코디 빌더(이동·크기·회전·레이어·undo/redo), 멱등 착용 기록과 CPW
+- **기상청 실제 날씨**(격자 번호만 전송) 또는 직접 고른 날씨로 **이유가 보이는 추천** — 일교차·바람·비까지 반영하고 "내 옷으로" 어떤 옷을 왜 골랐는지 시각적으로 보여 줌
+- 옷 등록: 사진·촬영 · **여러 장 한 번에** · 쇼핑몰 링크 · 다른 앱에서 "공유 → WearLog" · 샘플 → 내 옷
+- 코디 빌더(드래그·크기·회전·레이어·undo/redo), 멱등 착용 기록·CPW·월 달력
 - 선택형 커뮤니티 "오늘의 베스트 착장"(하트·신고·차단만), 카카오·Google·이메일 로그인 — 로그인 없이도 전부 로컬 동작
+
+## 🧭 지금 상태 한눈에 (2026-10-28 기준 — 다음 작업은 여기부터)
+
+**한 줄 요약**: 앱 기능은 대부분 구현·테스트 완료(단위 테스트 105개), **Supabase·카카오·Google·기상청 연동까지 실제 계정으로 설정 완료**. 남은 큰 일은 **실기기(APK) 확인**과 **출시 전 소유자 작업(법률·권리·스토어)**.
+
+### 외부 서비스·계정 (비밀 값은 여기에 적지 않음)
+| 서비스 | 리소스 | 상태 | 어디서 관리 |
+| --- | --- | --- | --- |
+| Supabase | 조직 `WearLog`(Free) / 프로젝트 `wearlog`, ref `ogudoghtgckuwbsyttsl`, 서울(ap-northeast-2) | ✅ 스키마 적용 · RLS 실DB 테스트 15개 통과 · Redirect URLs `wearlog://**`, `exp://**` | supabase.com 대시보드 |
+| 인증 공급자 | Email · Kakao · Google | ✅ 모두 ON (`/auth/v1/settings` 확인), 카카오 "이메일 없이 가입 허용" ON | Supabase → Auth → Providers (키·시크릿은 소유자 입력) |
+| 카카오 | 앱 `WearLog` ID 1625699, **개인 개발자 비즈 앱**, 카테고리 라이프스타일, 아이콘 등록 | ✅ 로그인 ON, 리다이렉트 URI = Supabase 콜백, 동의항목 닉네임 필수·프로필 사진/이메일 선택. 동의 화면 KOE 오류 없이 열림 | developers.kakao.com |
+| Google | Cloud 프로젝트 `wearlog-513004`, OAuth 웹 클라이언트 "WearLog Supabase" | ✅ 동의 화면 외부·**테스트 중**(테스트 사용자 = 소유자), 계정 선택 화면 열림 | console.cloud.google.com |
+| 기상청 | 공공데이터포털 단기예보(15084084), 개발계정 승인(~2028-10-28), **계정 공용 인증키** | ✅ Edge Function `weather-kma` 배포(JWT 검증 유지·CORS) → 실제 날씨 200, 앱 화면 표시 확인 | data.go.kr / Supabase → Edge Functions → Secrets `KMA_SERVICE_KEY` |
+| 앱 환경 변수 | `.env.local`(git 제외): Supabase URL·publishable key | ✅ / `EXPO_PUBLIC_SUPPORT_EMAIL`·`EXPO_PUBLIC_OPERATOR_NAME`은 **비어 있음** | 로컬 파일 (EAS 빌드 시 EAS env로 등록 필요) |
+| GitHub | `Logic-Phantom/WearLog` `main` | 모든 작업 푸시됨 | |
+
+### 검증 상태
+| 범위 | 상태 |
+| --- | --- |
+| 단위 테스트·타입·린트 | ✅ `jest` 105/105, `tsc`·`lint` 0건 |
+| 웹 미리보기 | ✅ 옷장 검색·정렬, 상세, 샘플→내 옷, 월 달력·날짜 수정, 정책 화면, 여러 장 등록(1/4→4/4), 실날씨 표시·추천·"이 코디 구성" |
+| 실서버 | ✅ RLS 테스트, 날씨 함수 200, 로그인 요청이 카카오 동의 화면·Google 계정 선택까지 이동 (동의·로그인 완료는 미실행) |
+| Android 실기기 | 🟡 10-27 APK(Galaxy S9)까지만. **10-28 작업 전부 미확인** |
+| iOS | ⬜ 전체 미확인 (macOS 없음) |
+
+### 다음에 바로 할 일 (순서대로)
+1. **새 APK 빌드 → 폰 설치 → 확인**: 카카오·Google 로그인 끝까지(앱 복귀 → 핸들 만들기), 내 주변 날씨(위치 권한), 여러 장 등록(완료 요약 창), 코디추천 "이 코디 구성"·기온 막대, 월 달력·날짜 수정. 빌드: `npx expo prebuild -p android --clean` 후 `android/gradlew assembleRelease` 또는 `npx eas-cli@latest build -p android --profile preview` (EAS면 `.env.local` 값을 EAS env로 먼저 등록)
+2. **이메일 로그인 마무리**: 커스텀 SMTP 연결 후 템플릿 2종에 `{{ .Token }}` → `docs/EMAIL_OTP_SETUP.md`
+3. **[소유자] 출시 차단 항목** (`docs/RELEASE_CHECKLIST.md` B): 카카오 **공식 심볼**로 로그인 버튼 교체, 샘플 사진·앱 아이콘 **출처·권리**, 운영자 이름·지원 이메일, iOS **Sign in with Apple** 여부, **위치정보법** 검토, 샘플 게시물의 가짜 하트 수 표시 정리
+4. **[권장] Google 보안 비밀 교체**(작업 대화에 노출됨) → 새 비밀 Supabase에 갱신
+5. 출시 준비: 정책 웹페이지(`node scripts/build-legal-site.mjs` → GitHub Pages), Google 동의 화면 "앱 게시", 기상청 운영계정 증량, Supabase Free 일시중지 정책 검토
 
 ## 시작하기
 
@@ -17,29 +49,31 @@ npm install
 npx expo start
 ```
 
-**개발 빌드가 필요합니다** — 2026-10-27부터 "공유 → WearLog"용 네이티브 모듈(`expo-share-intent`)이 들어가 Expo Go에서는 실행되지 않아요. `npx expo prebuild -p android --clean` 후 `npx expo run:android`(또는 `eas build --profile development`). 커뮤니티·실제 날씨를 쓰려면 `.env.example`을 `.env.local`로 복사해 Supabase 공개 값을 넣고 `docs/SOCIAL_AUTH_SETUP.md`, `docs/WEATHER_PROVIDER.md`를 따르세요. 비워 두면 커뮤니티는 "서버 미설정", 날씨는 수동 선택으로 동작합니다.
+**개발 빌드가 필요합니다** — "공유 → WearLog"용 네이티브 모듈(`expo-share-intent`) 때문에 Expo Go에서는 실행되지 않아요. `npx expo prebuild -p android --clean` 후 `npx expo run:android`(또는 `eas build --profile development`). `.env.local`이 있으면 커뮤니티·실제 날씨가 실서버로 동작하고(위 표), 없으면 커뮤니티는 "서버 미설정", 날씨는 수동 선택으로 동작합니다. 새로 설정할 때는 `.env.example`을 복사하고 `docs/SOCIAL_AUTH_SETUP.md`, `docs/WEATHER_PROVIDER.md`를 따르세요.
 
 ```bash
 npm test            # 단위 테스트
 npm run typecheck
 npm run lint
 npx expo-doctor
+npx expo start --web --port 8091   # 웹 미리보기(UI 확인용, 출시 대상 아님)
 ```
 
 ## 문서
 | 문서 | 내용 |
 | --- | --- |
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | 레이어, 의존 방향, 핵심 흐름 |
-| [DECISIONS](docs/DECISIONS.md) | 결정 기록(프롬프트 대비 변경 포함) |
+| [DECISIONS](docs/DECISIONS.md) | 결정 기록 D-001~D-030 (프롬프트 대비 변경 포함) |
 | [DESIGN_SYSTEM](docs/DESIGN_SYSTEM.md) | 쇼케이스 기반 토큰·컴포넌트 |
 | [DATA_MODEL](docs/DATA_MODEL.md) | 로컬/서버 스키마, 권한, 삭제 규칙 |
-| [WEATHER_PROVIDER](docs/WEATHER_PROVIDER.md) | 기상청 프록시, 필드 매핑, 남은 확인 |
-| [SOCIAL_AUTH_SETUP](docs/SOCIAL_AUTH_SETUP.md) | 카카오·Google 콘솔 설정(소유자 작업) |
+| [WEATHER_PROVIDER](docs/WEATHER_PROVIDER.md) | 기상청 프록시, 필드 매핑, 키 문제 진단 기록 |
+| [SOCIAL_AUTH_SETUP](docs/SOCIAL_AUTH_SETUP.md) | 카카오·Google 콘솔 설정, CutPick에서 겪은 문제 |
+| [EMAIL_OTP_SETUP](docs/EMAIL_OTP_SETUP.md) | 커스텀 SMTP·인증 코드 템플릿 |
 | [COMMUNITY_SAFETY](docs/COMMUNITY_SAFETY.md) | 서버 강제 규칙, 운영 절차 |
 | [SAMPLE_CATALOG](docs/SAMPLE_CATALOG.md) | 에셋 출처·라이선스 |
-| [IMPORT_SOURCES](docs/IMPORT_SOURCES.md) | 사진·쇼핑몰 링크·인스타그램 가져오기 검토 |
+| [IMPORT_SOURCES](docs/IMPORT_SOURCES.md) | 사진·여러 장·쇼핑몰 링크·공유·인스타그램(공식 연동 안 함) |
 | [PRIVACY](docs/PRIVACY.md) | 어떤 데이터가 어디로 가는지 |
-| [RELEASE_CHECKLIST](docs/RELEASE_CHECKLIST.md) | 출시 차단 항목·연동·스토어 순서 |
+| [RELEASE_CHECKLIST](docs/RELEASE_CHECKLIST.md) | **출시 차단 항목·연동 체크·스토어 순서** |
 | [MODEL_AND_LIBRARY_LICENSES](docs/MODEL_AND_LIBRARY_LICENSES.md) | 라이브러리·글꼴·로고·이미지·데이터 라이선스 점검 |
 | [VISION_POC](docs/VISION_POC.md) | 의류 분할 POC 계획(미착수) |
 | [TESTING](docs/TESTING.md) · [ROADMAP](docs/ROADMAP.md) | 검증 결과와 남은 일 |
@@ -49,33 +83,30 @@ npx expo-doctor
 ### ✅ 완료된 작업
 | 영역 | 내용 |
 | --- | --- |
-| 프로젝트 기반 | Expo SDK 58 · RN 0.88 · TS strict, `src/app` Expo Router, 5탭(홈·커뮤니티·코디추천·옷장·프로필), Jest·ESLint·expo-doctor 설정 |
-| 디자인 시스템 | 쇼케이스 기반 토큰(라이트/다크), 버튼·세그먼트·칩·색상 스와치·출처 배지·소셜 로그인 버튼·텍스트필드·상태 화면 컴포넌트, **쇼케이스 일치 리디자인(2026-10-27)**: 자체 SVG 탭 아이콘 JS 탭 바, 밑줄 탭·알약 세그먼트·하트 pill·값 행, 새 앱 아이콘 |
-| 온보딩 | 스플래시 + 시각적 취향 카드 4단계(다중 선택·건너뛰기·이전), 취향 프로필 저장 및 추천 반영 |
-| 샘플 옷장 | **고해상도 사진 샘플 37종**(배경 제거 컷아웃 포함, 2026-10-27 교체) + 자체 제작 SVG 템플릿 34종 / 16색 / 프리셋 9개, 샘플과 내 옷 분리. 서버 미설정 시 샘플 게시물 8개·날씨 코디 3개, 사진 샘플 코디 9개 |
-| 내 옷장 | 사진 선택·촬영, **쇼핑몰 링크로 가져오기**(사진·이름·브랜드·가격), **다른 앱에서 "공유 → WearLog"**(사진·링크, Android 확인), 직접 입력으로 등록, **샘플 → 내 옷으로 등록**(속성만), 상세(사진·속성·착용 횟수·CPW), 수정, 삭제, 카테고리 필터, **검색·정렬**, 3열 그리드 |
-| 추천 엔진 | 취향·상황·날씨·색 조합·최근 착용 반영, **제철 아님 감점**(쌀쌀함에 반팔 X), **최근 저장·착용 코디 반복 감점**, 실제 적용된 이유만 표시, 고정/제외, 내 옷만/샘플 포함 |
-| 코디 빌더 | **드래그 이동**, 버튼 이동·크기·회전·반전·레이어·복제·삭제, 실행 취소/다시 실행, 카테고리별 아이템 줄에서 담기, 샘플 색 점, JSON 저장 |
-| 착용 기록 | 같은 날 같은 코디 중복 방지(DB 수준), CPW 계산, 주/**월 달력**, 그날 기록 보기, **착용 날짜 수정**·삭제 |
-| 날씨 | 기상청 격자 변환(기기 내), 프록시 공급자(타임아웃·재시도·응답 검증), 캐시 만료, 수동 날씨·지역 선택, 체감온도 "추정", Edge Function `weather-kma` |
-| 커뮤니티·로그인 | Supabase 스키마·RLS·스토리지 정책, 카카오/Google/이메일 로그인, 오늘의 베스트·최신 피드, 하트(낙관적 반영·롤백), 신고·차단, 게시 전 동의 + EXIF/GPS 제거 확인, 계정 삭제, **내 게시물·차단 목록 화면**, **개인정보 처리방침·가이드라인 화면(초안)** |
-| 문서 | 아키텍처, 결정 기록, 디자인 시스템, 데이터 모델, 날씨, 소셜 로그인 설정, 커뮤니티 안전, 샘플 출처, 개인정보, 테스트, 로드맵 |
-| 검증 | 단위 테스트 88개 통과, 타입체크·린트 0건, expo-doctor 20/20, 웹 번들 성공, 웹 미리보기 수동 확인 |
+| 프로젝트 기반 | Expo SDK 58 · RN 0.88 · TS strict, `src/app` Expo Router, 5탭(홈·커뮤니티·코디추천·옷장·프로필), Jest·ESLint·expo-doctor |
+| 디자인 시스템 | 쇼케이스 기반 토큰(라이트/다크), 자체 SVG 탭 아이콘, 버튼·세그먼트·칩·스와치·출처 배지·검색창·상태 화면, 카카오·Google 로그인 버튼(공급자 가이드 색·문구, Google 4색 G) |
+| 온보딩 | 스플래시 + 시각적 취향 카드 4단계, 취향 프로필 저장 및 추천 반영 |
+| 샘플 옷장 | 고해상도 사진 샘플 37종(컷아웃 포함) + 벡터 34종 / 16색 / 프리셋 9개, 샘플 ≠ 내 옷(착용·통계 제외), **샘플 → 내 옷으로 등록**(속성만) |
+| 내 옷장 | 사진·촬영, **여러 장 한 번에 등록**(최대 20장, 사진마다 확인·건너뛰기), 쇼핑몰 링크(사진·이름·브랜드·가격), "공유 → WearLog"(Android 확인), 직접 입력, **투명 PNG/WebP 보존**, 상세(사진·속성·착용·CPW), 수정·삭제, 카테고리 필터, **검색·정렬** |
+| 추천 엔진 | 취향·상황·색 조합·최근 착용·반복 코디 감점, **날씨: 기온 구간 + 제철 아님 감점 + 일교차 10°C↑·바람 7m/s↑ 아우터 상향 + 비 오면 밝은 하의·신발 감점**, 실제 적용된 규칙만 이유로, 고정/제외, 내 옷만/샘플 포함 |
+| 추천 화면 | 플랫레이(내 옷/샘플 배지), **기온 막대(최저·지금·최고·일교차)**, **오늘 옷차림 가이드**, **이 코디 구성(아이템별 선택 이유 태그)**, 추천 이유, 저장·다른 코디·빌더 편집 |
+| 코디 빌더 | 드래그 이동, 크기·회전·반전·레이어·복제·삭제, undo/redo, 카테고리별 담기, JSON 저장 |
+| 착용 기록 | 멱등 기록(DB 수준), CPW, 주/**월 달력**, 그날 기록, **착용 날짜 수정**·삭제 |
+| 날씨 | 기상청 격자 변환(기기 내), **Edge Function `weather-kma` 실서버 동작**(Encoding/Decoding 키 모두 처리·사유 코드 로그·CORS), 캐시·만료·재시도, 수동 날씨·지역 선택, 체감온도 "추정" |
+| 커뮤니티·로그인 | Supabase 스키마·RLS·스토리지(**실서버 적용·RLS 통과**), 카카오/Google/이메일 로그인(**공급자 실설정**), 만 14세+약관 동의 체크, 피드·하트·신고·차단, 게시 전 동의 + EXIF/GPS 제거, 계정 삭제, 내 게시물·차단 목록 화면 |
+| 법·라이선스 | 처리방침·이용약관·가이드라인·계정 삭제 안내(초안, 앱+웹페이지 생성기), 오픈소스 라이선스 화면(번들 80개 감사, 카피레프트 없음), 이미지·데이터 출처 화면, 출시 체크리스트 |
+| 검증 | 단위 테스트 105개, 타입·린트 0건, 웹 미리보기, 실서버(RLS·날씨·OAuth 이동) |
 
 ### ⬜ 앞으로 할 작업 (우선순위 순)
-1. **실기기 확인** — Android(Galaxy S9, 10-27)에서 SQLite·NativeTabs·SVG·샘플/빌더/추천 흐름 확인됨. 남은 것: 사진 선택·카메라 등록, 내 주변 날씨, iOS
-2. **Supabase 연결** — 프로젝트 생성, 마이그레이션 적용, RLS 테스트 SQL 실행(작성 완료 `supabase/tests/rls_test.sql`), `weather-kma` 배포, 기상청 활용신청과 이용허락범위 확인
-3. **소셜 로그인 설정** — Google·Kakao 콘솔 설정 후 실기기 로그인 왕복 검증 (`docs/SOCIAL_AUTH_SETUP.md` 체크리스트)
-4. **코디 → 이미지 캡처** — 게시용 파생 이미지 생성 방법 결정(라이선스·Expo 호환 확인)
-5. **옷 가져오기 보강** — iOS 공유 확장 실기기 확인, 공유 모듈 패치 업스트림 제보, 여러 장 한 번에 등록 (`docs/IMPORT_SOURCES.md`). 인스타그램 공식 API는 프로페셔널 계정·서버·Meta 검수가 필요해 보류
-6. **옷장 보강** — 중복 병합, 데이터 내보내기/백업/복원 (검색·정렬·샘플→내 옷 등록은 2026-10-28 완료)
-7. **착용 기록·추천 기기 확인** — 월 달력·날짜 수정, 제철 감점·반복 감점을 실기기에서 확인 (코드 완료 2026-10-28)
-8. **캔버스 제스처** — 드래그 이동은 완료(PanResponder). 핀치 확대·회전 제스처 남음
-9. **출시 전 필수** — 개인정보처리방침·가이드라인 **법률 검토와 운영자·연락처 채우기**(화면 초안은 완료), RLS 테스트 SQL, 운영 절차, 라이브러리 라이선스 점검 문서, **쇼케이스 사진·아이콘 원본 권리 확인 및 고해상도 원본 교체**(현재 1254px 보드에서 잘라 흐릿함)
-10. **비전 POC (Phase 0)** — 단일 아이템 배경 제거 → 사람 분할 → 의류 파싱 순으로 별도 검증 (`docs/VISION_POC.md`)
-11. **후순위** — 인사이트 통계, 부족 카테고리 안내, 유료화 검토
-
-자세한 상태는 [ROADMAP](docs/ROADMAP.md)에 있습니다.
+1. **실기기 확인** — 10-28 작업 전부(로그인 왕복, 내 주변 날씨, 여러 장 등록, 추천 시각화, 월 달력), iOS 전체
+2. **이메일 로그인** — 커스텀 SMTP + 템플릿 (`docs/EMAIL_OTP_SETUP.md`)
+3. **출시 차단 항목(소유자)** — 카카오 공식 심볼, 샘플·아이콘 권리, 운영자·연락처, Sign in with Apple, 위치정보법, 샘플 게시물 숫자 표시, 법률 검토 (`docs/RELEASE_CHECKLIST.md`)
+4. **코디 → 이미지 캡처** — 게시용 파생 이미지 생성 방법 결정
+5. **옷장 보강** — 중복 병합, 데이터 내보내기/백업/복원
+6. **캔버스 제스처** — 핀치 확대·회전
+7. **스토어 준비** — 정책 웹페이지 공개, Google 동의 화면 게시, 기상청 운영계정, EAS 빌드·Play 비공개 테스트(12명×14일)
+8. **비전 POC (Phase 0)** — 배경 제거 → 사람 분할 → 의류 파싱 (`docs/VISION_POC.md`)
+9. **후순위** — 인사이트 통계, 부족 카테고리 안내, 유료화 검토
 
 ## 작업 내역 (Work Log)
 
