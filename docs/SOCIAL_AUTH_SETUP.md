@@ -42,3 +42,11 @@
 - [ ] 로그인 취소 / 공급자 비활성 / 세션 만료 후 복원
 - [ ] 동일 이메일 두 공급자 → 계정 분리 확인
 - [ ] 계정 삭제 → 스토리지·행 삭제 확인
+
+## CutPick에서 실제로 겪은 것 (2026-10-23 CutPick 연동 기록 기준, WearLog에도 동일)
+- **이메일 OTP**: Supabase 기본 메일은 링크만 들어 있음. 템플릿 수정은 커스텀 SMTP 연결 후에만 가능 → SMTP 연결 → "Magic link or OTP"와 "Confirm sign up" **두 템플릿 모두**에 `{{ .Token }}`. 새 프로젝트 기본 코드 길이 8자리(앱은 6~10자리 허용). SMTP를 붙이면 `policy-texts.ts`의 `MAIL_SENDER`도 바꾼다.
+- **카카오 KOE205**: 요청한 동의항목이 콘솔에서 설정되지 않았을 때. 닉네임은 필수, 프로필 사진·카카오계정(이메일)은 선택으로 설정. 이메일 동의항목은 비즈 앱(개인 개발자 전환 가능)에서만 열림. 이메일 없이 쓰려면 Supabase Kakao "Allow users without email" 켜기. 개인정보 국외이전 정보(Supabase, Inc.)도 콘솔에 등록.
+- **Google**: 동의 화면이 "테스트 중"이면 테스트 사용자만 로그인됨 → 출시 전 "앱 게시"(프로덕션). 기본 범위(email·profile)만 쓰고 로고를 올리지 않으면 인증 심사 없이 게시 가능했음.
+- Redirect URLs는 `wearlog://**`, `exp://**`(CutPick은 `cutpick://**`).
+- **비밀 값 입력(Kakao Client Secret, Google Client Secret, KMA 서비스 키, DB 비밀번호)은 소유자가 직접** 입력한다. 앱·저장소·채팅에 남기지 않는다.
+- WearLog는 CutPick과 **별도 Supabase 프로젝트**를 쓴다(스키마·버킷·정책이 다르고, 한쪽 장애·한도가 다른 앱에 번지지 않게). Free 플랜은 조직당 활성 프로젝트 2개까지라 CutPick 1개 + WearLog 1개로 맞음.

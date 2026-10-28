@@ -2,27 +2,25 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 
 import { AppText, ErrorState, ScreenScroll, spacing } from '@/design-system';
-import { POLICIES, type PolicyId } from '@/features/legal/policies';
+import { LEGAL_DOCS, type LegalDocId } from '@/features/legal/documents';
 
-/** 개인정보 처리방침 / 커뮤니티 가이드라인 (static, bundled — readable offline). */
-export default function PolicyScreen() {
+/** 개인정보 처리방침 · 이용약관 · 가이드라인 · 오픈소스 라이선스 · 출처 (bundled — readable offline). */
+export default function LegalScreen() {
   const { doc } = useLocalSearchParams<{ doc: string }>();
-  const policy = POLICIES[doc as PolicyId];
-  if (!policy) return <ErrorState title="문서를 찾을 수 없어요" message="잘못된 주소예요." />;
+  const d = LEGAL_DOCS[doc as LegalDocId];
+  if (!d) return <ErrorState title="문서를 찾을 수 없어요" message="잘못된 주소예요." />;
   return (
     <ScreenScroll>
-      <Stack.Screen options={{ title: policy.title }} />
+      <Stack.Screen options={{ title: d.title }} />
       <AppText variant="caption" tone="tertiary">
-        {policy.status}
+        시행일 {d.updatedAt}
       </AppText>
-      {policy.sections.map((s) => (
-        <View key={s.heading} style={{ gap: spacing.xs }}>
-          <AppText variant="sectionTitle">{s.heading}</AppText>
-          {s.body.map((line) => (
-            <AppText key={line} variant="body" tone="secondary" selectable>
-              {s.body.length > 1 ? `· ${line}` : line}
-            </AppText>
-          ))}
+      {d.sections.map((s, i) => (
+        <View key={`${i}-${s.heading}`} style={{ gap: spacing.xxs }}>
+          <AppText variant="bodyStrong">{s.heading}</AppText>
+          <AppText variant="secondary" tone="secondary" selectable>
+            {s.body}
+          </AppText>
         </View>
       ))}
     </ScreenScroll>

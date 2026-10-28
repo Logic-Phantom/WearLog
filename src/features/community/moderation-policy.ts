@@ -31,6 +31,8 @@ export const COMMUNITY_LIMITS = {
 } as const;
 
 export const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || '';
+/** Person or business named as 개인정보 보호책임자 in the privacy policy (required before public release). */
+export const OPERATOR_NAME = process.env.EXPO_PUBLIC_OPERATOR_NAME || '';
 
 const HANDLE_RE = /^[a-z0-9_.]{3,20}$/;
 const RESERVED = ['admin', 'wearlog', 'support', 'official', 'moderator', 'root'];

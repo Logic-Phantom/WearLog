@@ -49,7 +49,13 @@ export default function SettingsScreen() {
       <Card padded={false}>
         <ListRow label="개인정보 처리방침" onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'privacy' } })} />
         <Divider />
+        <ListRow label="이용약관" onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'terms' } })} />
+        <Divider />
         <ListRow label="커뮤니티 가이드라인" onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'guidelines' } })} />
+        <Divider />
+        <ListRow label="오픈소스 라이선스" onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'oss' } })} />
+        <Divider />
+        <ListRow label="이미지·데이터 출처" onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'image-credits' } })} />
       </Card>
       <AppText variant="caption" tone="tertiary" style={{ paddingHorizontal: spacing.xs }}>
         옷장·사진·기록·취향은 이 기기에만 저장돼요. 로그인해도 자동으로 업로드되지 않아요.

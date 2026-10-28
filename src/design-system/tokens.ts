@@ -50,9 +50,14 @@ export interface ColorTokens {
 }
 
 /** Third-party brand buttons (official brand colors; see docs/SOCIAL_AUTH_SETUP.md for guideline links). */
+/**
+ * Provider login buttons — values from the providers' own guides (checked 2026-10-28):
+ * Kakao design guide (container #FEE500, symbol #000, label #000 85%, radius 12) and
+ * Google Sign-In branding (light: #FFFFFF / 1px #747775 / text #1F1F1F, standard 4-color "G").
+ */
 export const brandButtons = {
-  kakao: { background: '#FEE500', text: '#191919' },
-  google: { background: '#FFFFFF', text: '#1F1F1F', border: '#DADCE0' },
+  kakao: { background: '#FEE500', text: 'rgba(0,0,0,0.85)', symbol: '#000000', radius: 12 },
+  google: { background: '#FFFFFF', text: '#1F1F1F', border: '#747775', radius: 12, g: { blue: '#4285F4', green: '#34A853', yellow: '#FBBC05', red: '#EA4335' } },
 } as const;
 
 /** Splash over the hanger-rack photo: fixed light palette in both themes (the photo is light). */

@@ -2,10 +2,11 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
-import { AppText, DangerButton, GhostButton, InlineMessage, PrimaryButton, Row, ScreenScroll, SecondaryButton, SocialSignInButton, TextField, Wordmark, spacing } from '@/design-system';
+import { AppText, Checkbox, DangerButton, GhostButton, InlineMessage, PrimaryButton, Row, ScreenScroll, SecondaryButton, SocialSignInButton, TextField, Wordmark, spacing } from '@/design-system';
 import { toUserMessage } from '@/domain/errors';
 import type { SocialProviderId } from '@/features/auth/social-auth';
 import { validateHandle } from '@/features/community/moderation-policy';
+import { COMMUNITY_MIN_AGE, SERVER_LOCATION } from '@/features/legal/policy-texts';
 import { communityRepository } from '@/features/community/supabase-community-repository';
 import { useAsync } from '@/hooks/use-async';
 import { useCommunitySession } from '@/hooks/use-community-session';
@@ -26,6 +27,8 @@ export default function AccountScreen() {
   const [codeSent, setCodeSent] = useState(false);
   const [handle, setHandle] = useState('');
   const [emailOpen, setEmailOpen] = useState(false);
+  /** 만 14세 이상 + 약관·처리방침 동의: without it no sign-in method is enabled (PIPA, no guardian consent flow). */
+  const [ageConsent, setAgeConsent] = useState(false);
 
   const run = async (kind: typeof busy, fn: () => Promise<unknown>) => {
     setBusy(kind);
@@ -79,10 +82,27 @@ export default function AccountScreen() {
           {'로그인하고 더 많은 기능을\n이용해보세요'}
         </AppText>
       </View>
+      {configured ? (
+        <View style={{ gap: spacing.xxs, marginBottom: spacing.xs }}>
+          <Checkbox
+            checked={ageConsent}
+            label={`만 ${COMMUNITY_MIN_AGE}세 이상이며, 이용약관과 개인정보 처리방침(Supabase 위탁·${SERVER_LOCATION.country} 서버 저장 포함)에 동의해요.`}
+            onPress={() => setAgeConsent(!ageConsent)}
+          />
+          <Row gap={spacing.sm} style={{ justifyContent: 'center' }}>
+            <Pressable onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'terms' } })} hitSlop={8} accessibilityRole="link">
+              <AppText variant="caption" tone="secondary" style={{ textDecorationLine: 'underline' }}>이용약관</AppText>
+            </Pressable>
+            <Pressable onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'privacy' } })} hitSlop={8} accessibilityRole="link">
+              <AppText variant="caption" tone="secondary" style={{ textDecorationLine: 'underline' }}>개인정보 처리방침</AppText>
+            </Pressable>
+          </Row>
+        </View>
+      ) : null}
       {(['kakao', 'google'] as const).map((p) => (
-        <SocialSignInButton key={p} provider={p} disabled={!configured || !enabled.includes(p)} loading={busy === p} onPress={() => run(p, () => communityRepository.signInWithProvider(p))} />
+        <SocialSignInButton key={p} provider={p} disabled={!configured || !ageConsent || !enabled.includes(p)} loading={busy === p} onPress={() => run(p, () => communityRepository.signInWithProvider(p))} />
       ))}
-      <SecondaryButton label="이메일로 시작하기" onPress={() => setEmailOpen((v) => !v)} disabled={!configured} />
+      <SecondaryButton label="이메일로 시작하기" onPress={() => setEmailOpen((v) => !v)} disabled={!configured || !ageConsent} />
       {!configured ? (
         <AppText variant="caption" tone="tertiary" align="center">
           커뮤니티 서버가 아직 연결되지 않아 로그인할 수 없어요. 옷장·코디·기록은 로그인 없이 그대로 쓸 수 있어요.
@@ -91,7 +111,7 @@ export default function AccountScreen() {
         <AppText variant="caption" tone="tertiary" align="center">비활성화된 버튼은 서버에서 아직 설정되지 않은 로그인 방식이에요.</AppText>
       ) : null}
 
-      {emailOpen && configured ? (
+      {emailOpen && configured && ageConsent ? (
         <View style={{ gap: spacing.xs, marginTop: spacing.sm }}>
           <TextField label="이메일" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="you@example.com" />
           {codeSent ? <TextField label="인증 코드" value={code} onChangeText={setCode} keyboardType="number-pad" /> : null}
@@ -106,7 +126,7 @@ export default function AccountScreen() {
       {error ? <InlineMessage tone="error" message={error} /> : null}
       <Row style={{ justifyContent: 'center', marginTop: spacing.lg }} gap={6}>
         <AppText variant="caption" tone="tertiary">계정이 없으신가요?</AppText>
-        <Pressable onPress={() => setEmailOpen(true)} disabled={!configured} hitSlop={8} accessibilityRole="button">
+        <Pressable onPress={() => setEmailOpen(true)} disabled={!configured || !ageConsent} hitSlop={8} accessibilityRole="button">
           <AppText variant="caption" style={{ textDecorationLine: 'underline' }}>회원가입</AppText>
         </Pressable>
       </Row>

@@ -112,3 +112,12 @@
 ## D-024 (2026-10-28) 개인정보 처리방침·커뮤니티 가이드라인: 앱 내 "초안" 화면
 - `src/features/legal/policies.ts`에 실제 코드 동작 기준 문구를 두고 `/legal/[doc]`로 표시. 화면에 "초안 · 법률 검토 전"을 명시. 문의처는 `EXPO_PUBLIC_SUPPORT_EMAIL`이 있을 때만 표시하고, 운영자·보호책임자 정보는 지어내지 않고 "정식 출시 전 공개"로 둠.
 - 데이터 흐름이 바뀌면 `docs/PRIVACY.md`와 이 파일을 함께 고칠 것.
+
+## D-025 (2026-10-28) 출시 전 법적 문서·라이선스: CutPick 구조 이식
+- `policy-texts.ts`(처리방침·약관·가이드라인·계정 삭제, 앱과 웹페이지 공용) + `documents.ts`(오픈소스·출처) + `scripts/generate-oss-licenses.mjs`(번들 소스맵 기반 감사) + `scripts/build-legal-site.mjs`(GitHub Pages용). D-024의 단순 초안 화면을 대체.
+- 커뮤니티 로그인 전 만 14세 이상 + 약관·처리방침 동의 체크(PIPA: 만 14세 미만 법정대리인 동의 절차 없음).
+- 서버 위치는 `SERVER_LOCATION`(서울 가정) — 실제 Supabase 리전과 반드시 일치시킬 것.
+
+## D-026 (2026-10-28) 소셜 로그인 버튼을 공급자 가이드에 맞춤
+- 2026-10-28 공식 가이드 확인: Google은 표준 4색 "G" 필수·흰 배경 #747775 테두리, Kakao는 #FEE500·공식 말풍선 심볼 필수(형태 변경 불가)·라벨 "카카오 로그인"·radius 12.
+- Google은 4색 G를 SVG로 그려 충족. Kakao는 색·문구·radius만 맞추고 심볼은 Ionicons 임시 → 공식 리소스 다운로드 후 교체(출시 차단 항목, docs/RELEASE_CHECKLIST.md).

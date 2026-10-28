@@ -39,6 +39,8 @@ npx expo-doctor
 | [SAMPLE_CATALOG](docs/SAMPLE_CATALOG.md) | 에셋 출처·라이선스 |
 | [IMPORT_SOURCES](docs/IMPORT_SOURCES.md) | 사진·쇼핑몰 링크·인스타그램 가져오기 검토 |
 | [PRIVACY](docs/PRIVACY.md) | 어떤 데이터가 어디로 가는지 |
+| [RELEASE_CHECKLIST](docs/RELEASE_CHECKLIST.md) | 출시 차단 항목·연동·스토어 순서 |
+| [MODEL_AND_LIBRARY_LICENSES](docs/MODEL_AND_LIBRARY_LICENSES.md) | 라이브러리·글꼴·로고·이미지·데이터 라이선스 점검 |
 | [VISION_POC](docs/VISION_POC.md) | 의류 분할 POC 계획(미착수) |
 | [TESTING](docs/TESTING.md) · [ROADMAP](docs/ROADMAP.md) | 검증 결과와 남은 일 |
 
@@ -62,7 +64,7 @@ npx expo-doctor
 
 ### ⬜ 앞으로 할 작업 (우선순위 순)
 1. **실기기 확인** — Android(Galaxy S9, 10-27)에서 SQLite·NativeTabs·SVG·샘플/빌더/추천 흐름 확인됨. 남은 것: 사진 선택·카메라 등록, 내 주변 날씨, iOS
-2. **Supabase 연결** — 프로젝트 생성, 마이그레이션 적용, RLS 테스트 SQL 작성·실행, `weather-kma` 배포, 기상청 활용신청과 이용허락범위 확인
+2. **Supabase 연결** — 프로젝트 생성, 마이그레이션 적용, RLS 테스트 SQL 실행(작성 완료 `supabase/tests/rls_test.sql`), `weather-kma` 배포, 기상청 활용신청과 이용허락범위 확인
 3. **소셜 로그인 설정** — Google·Kakao 콘솔 설정 후 실기기 로그인 왕복 검증 (`docs/SOCIAL_AUTH_SETUP.md` 체크리스트)
 4. **코디 → 이미지 캡처** — 게시용 파생 이미지 생성 방법 결정(라이선스·Expo 호환 확인)
 5. **옷 가져오기 보강** — iOS 공유 확장 실기기 확인, 공유 모듈 패치 업스트림 제보, 여러 장 한 번에 등록 (`docs/IMPORT_SOURCES.md`). 인스타그램 공식 API는 프로페셔널 계정·서버·Meta 검수가 필요해 보류
@@ -218,4 +220,37 @@ npx expo-doctor
 - 정책 화면은 법률 검토 전 초안. 운영자·보호책임자·연락처 미기재.
 - 데이터 내보내기/백업, 중복 병합, 핀치 제스처, 코디 이미지 캡처는 미착수(새 의존성·결정 필요).
 - 웹 미리보기 브라우저에 테스트용 옷 1벌(베이지 싱글 코트)·착용 1건이 남아 있음(브라우저 로컬 저장소, 앱·기기와 무관).
+
+### 2026-10-28 — 소셜 로그인·Supabase 연동 상태 점검 + 출시 전 라이선스·정책·저작권 검토
+요청: "카카오·구글 로그인, Supabase 연동 됐는지 → 크롬 확장으로 CutPick처럼 연동, 출시 전 라이선스·정책·저작권 세세하게 검토".
+
+**연동 상태 (점검 결과)** — 앱 코드(PKCE 소셜 로그인, 이메일 OTP, 피드·하트·신고·차단·삭제, RLS 마이그레이션, 기상청 Edge Function)는 있으나 **Supabase 프로젝트·카카오 앱·Google OAuth 클라이언트는 아직 하나도 만들지 않음**(`.env.local` 없음). **Claude in Chrome 확장이 연결되지 않아(3회 시도) 콘솔 작업은 진행하지 못함.** 대신 CutPick 실제 연동 절차·겪은 문제(OTP 템플릿·KOE205·Google 게시)를 `docs/SOCIAL_AUTH_SETUP.md`에 정리하고 RLS 테스트를 이식함.
+
+**구현**
+- CutPick 법적 문서 구조 이식(D-025): `policy-texts.ts`(처리방침 13개 항목·약관·가이드라인·계정 삭제 — 격자 번호만 전송, 링크 가져오기는 기기 직접, Supabase 위탁, 만 14세, 보호책임자, 권익 구제), `documents.ts`, 설정에 이용약관·오픈소스 라이선스·이미지·데이터 출처 추가. 이전 초안 `policies.ts` 대체.
+- 커뮤니티 로그인 전 **만 14세 이상 + 약관·처리방침 동의** 체크(없으면 로그인 버튼 비활성).
+- 오픈소스 감사 `scripts/generate-oss-licenses.mjs` → 실제 Android 번들 80개 패키지(MIT 76·ISC 2·0BSD 1·MIT AND Apache-2.0 1), 카피레프트 없음. 앱 화면 + `tests/unit/legal.test.ts`로 허용 목록 재검사.
+- 스토어용 정책 웹페이지 생성기 `scripts/build-legal-site.mjs`(운영자·이메일 없으면 실패).
+- 로그인 버튼을 공급자 공식 가이드에 맞춤(D-026): Google 4색 G·#747775 테두리·"Google로 로그인", 카카오 #FEE500·radius 12·"카카오 로그인". 카카오 공식 심볼은 리소스 다운로드 필요(출시 차단 항목).
+- `supabase/tests/rls_test.sql` — CutPick 13개 검사 이식 + WearLog 규칙(자기 하트·자기 신고 금지, featured_on 보호).
+- 문서: `docs/RELEASE_CHECKLIST.md`, `docs/MODEL_AND_LIBRARY_LICENSES.md`, SOCIAL_AUTH_SETUP 보강, DECISIONS D-025·D-026.
+
+**검토에서 나온 출시 차단·확인 항목** (자세히: `docs/RELEASE_CHECKLIST.md` B)
+1. 카카오 공식 심볼 미적용(가이드상 심볼 필수·형태 변경 불가).
+2. 샘플 사진·앱 아이콘 원본 출처·초상권 미기재(AI 생성이면 도구·약관 기록 필요).
+3. 운영자 이름·지원 이메일 미설정 → 처리방침에 "미설정" 표시.
+4. iOS App Store 4.8 — 카카오·Google 로그인이면 Sign in with Apple 등 필요.
+5. 위치정보법 — "내 주변 날씨"의 위치기반서비스 신고 필요 여부 확인.
+6. 샘플 게시물의 가짜 하트 수(2.4k)·댓글 수·"1시간 전" 표시 → 실제 활동처럼 보일 위험.
+7. 기상청 데이터: 공공누리 제1유형(출처표시) — 현재 표기로 충족, 활용신청(개발계정 일 10,000건) 필요.
+8. 쇼핑몰 사진: 개인 기록용으로만, 커뮤니티 공개 금지(약관·가이드라인에 명시).
+
+**실행한 검증 (2026-10-28)**
+- `npx tsc --noEmit` 통과 · `npx expo lint` 0건 · `npx jest` 91/91
+- 웹 미리보기: 로그인 화면 새 버튼(4색 G·카카오 노랑), 처리방침(보호책임자 항목), 오픈소스 라이선스 화면 표시.
+
+**미검증 / 미실행**
+- Supabase·카카오·Google 콘솔 설정 전부(Chrome 확장 미연결). `rls_test.sql`은 실DB에서 실행 전.
+- 동의 체크박스는 서버 설정 시에만 보여 웹에서는 표시 확인 못 함(서버 미설정 상태).
+- 정책 문구 법률 검토, 상표 검색, 네이티브 서드파티 라이선스 정밀 감사.
 
