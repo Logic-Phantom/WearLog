@@ -40,7 +40,7 @@
 - [x] (2026-10-28) 로그인 요청 확인: `/auth/v1/settings` kakao·google·email 모두 ON. `/authorize`가 카카오(scope `account_email profile_image profile_nickname`)·Google(`email profile`)로 올바른 client_id·콜백과 함께 이동, Chrome에서 카카오 동의 화면(KOE 오류 없음, WearLog 아이콘·필수/선택 항목 표시)·Google 계정 선택 화면(redirect_uri_mismatch 없음)까지 확인. 동의·로그인은 누르지 않음
 - [x] (2026-10-28) `.env.local`에 URL·publishable key(공개 값), `get_feed` RPC 200
 - [x] (2026-10-28) `weather-kma` Edge Function 배포(대시보드), JWT 검증 유지 — 앱과 같은 호출로 503 `not_configured`(키 전) 확인
-- [ ] **[소유자]** 공공데이터포털 로그인 → 기상청_단기예보 조회서비스(15084084) **활용신청**(자동승인) → 마이페이지에서 **일반 인증키(Decoding)** 복사 → Supabase → Edge Functions → **Secrets** → `KMA_SERVICE_KEY` 추가 → 함수 재호출로 200 확인
+- [x] (2026-10-28) 활용신청 승인(개발계정, 만료 2028-10-28, 계정 공용 키) → Secrets `KMA_SERVICE_KEY` → 함수 200·앱 화면 실날씨 확인. 개발계정 일 10,000건은 같은 계정의 다른 프로젝트와 공유 → 출시 전 운영계정 증량 신청
 - [ ] 실기기에서 카카오·Google·이메일 로그인 왕복, 두 계정으로 게시→하트→신고→차단→삭제→계정 삭제
 
 ## D. 스토어

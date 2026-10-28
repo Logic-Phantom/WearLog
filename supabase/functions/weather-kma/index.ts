@@ -6,6 +6,9 @@
 // Logs never include nx/ny or the key.
 
 const BASE = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0';
+// Native apps ignore CORS; the web preview needs it (the app sends apikey/authorization → preflight).
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info', 'Access-Control-Allow-Methods': 'GET, OPTIONS' };
+const reply = (body: unknown, status = 200, extra: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json', ...extra } });
 const VILAGE_BASE_HOURS = [2, 5, 8, 11, 14, 17, 20, 23];
 const TTL_MINUTES = 60;
 
@@ -89,15 +92,16 @@ function slot(fcst: Item[], date: string, time: string) {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   // Accept either portal key form: the "Encoding" key is URL-encoded and would be encoded twice by URLSearchParams.
   const raw = Deno.env.get('KMA_SERVICE_KEY')?.trim();
   const key = raw && raw.includes('%') ? decodeURIComponent(raw) : raw;
-  if (!key) return new Response(JSON.stringify({ error: 'not_configured' }), { status: 503 });
+  if (!key) return reply({ error: 'not_configured' }, 503);
   const u = new URL(req.url);
   const nx = Number(u.searchParams.get('nx'));
   const ny = Number(u.searchParams.get('ny'));
   if (!Number.isInteger(nx) || !Number.isInteger(ny) || nx < 1 || nx > 149 || ny < 1 || ny > 253) {
-    return new Response(JSON.stringify({ error: 'bad_grid' }), { status: 400 });
+    return reply({ error: 'bad_grid' }, 400);
   }
   try {
     const now = kstNow();
@@ -137,11 +141,9 @@ Deno.serve(async (req) => {
     }
     const fetchedAt = new Date().toISOString();
     const validUntil = new Date(Date.now() + TTL_MINUTES * 60 * 1000).toISOString();
-    return new Response(JSON.stringify({ fetchedAt, validUntil, periods }), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=600' },
-    });
+    return reply({ fetchedAt, validUntil, periods }, 200, { 'Cache-Control': 'public, max-age=600' });
   } catch (e) {
     console.warn('[weather-kma] upstream failure', (e as Error).message);
-    return new Response(JSON.stringify({ error: 'upstream' }), { status: 502 });
+    return reply({ error: 'upstream' }, 502);
   }
 });

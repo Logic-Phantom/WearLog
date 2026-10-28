@@ -106,3 +106,23 @@ describe('weather signal', () => {
     expect(snapshotSummary({ ...snap, apparentTemperatureC: null, apparentTemperatureSource: 'unknown', precipitationProbabilityPct: null })).toBe('현재 8°C');
   });
 });
+
+describe('weather-kma live response (2026-10-28, 서울 nx=60 ny=127)', () => {
+  // Captured from the deployed Edge Function — keeps the app parser in step with the real proxy output.
+  const live = {
+    fetchedAt: '2026-10-28T06:41:02.859Z',
+    validUntil: '2026-10-28T07:41:02.859Z',
+    periods: {
+      now: { isForecast: false, forecastTime: '2026-10-28T16:00:00+09:00', temperatureC: 13.7, minTemperatureC: 7, maxTemperatureC: 13, conditionLabelKo: '맑음', precipitationProbabilityPct: 0, precipitationMm: 0, precipitationType: 'none', windSpeedMps: 3.6, humidityPct: 18 },
+      evening: { isForecast: true, forecastTime: '2026-10-28T19:00:00+09:00', temperatureC: 9, conditionLabelKo: '맑음', precipitationProbabilityPct: 0, precipitationMm: 0, precipitationType: 'none', windSpeedMps: 0.8, humidityPct: 60, minTemperatureC: 7, maxTemperatureC: 13 },
+    },
+  };
+
+  it('parses the real proxy output without inventing missing periods', () => {
+    const b = parseKmaProxyResponse(live, '서울 중구');
+    expect(b.now).toMatchObject({ temperatureC: 13.7, conditionLabelKo: '맑음', precipitationProbabilityPct: 0, humidityPct: 18, attribution: '기상청' });
+    expect(b.evening?.temperatureC).toBe(9);
+    expect(b.morning).toBeUndefined();
+    expect(b.afternoon).toBeUndefined();
+  });
+});
