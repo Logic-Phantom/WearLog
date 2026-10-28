@@ -1,6 +1,6 @@
 import type { TasteProfile } from '@/domain/models';
 import { recommend, type RecItem, type RecommendInput } from '@/features/recommendations/engine';
-import { candidatePool, sampleToRecItem } from '@/features/recommendations/rec-items';
+import { candidatePool, refsSignature, sampleToRecItem } from '@/features/recommendations/rec-items';
 import { getTemplate } from '@/features/sample-wardrobe/catalog';
 import type { WeatherSignal } from '@/features/weather/weather-signal';
 
@@ -108,5 +108,42 @@ describe('candidate pool', () => {
     const all = candidatePool('withSamples', mine);
     expect(all.some((i) => i.ref.kind === 'sampleTemplate')).toBe(true);
     expect(sampleToRecItem(getTemplate('jeans')!).ref.kind).toBe('sampleTemplate');
+  });
+});
+
+describe('weather season fit', () => {
+  const chilly: WeatherSignal = { band: 'chilly', rainLikely: false, windy: false, indoor: false, summary: '쌀쌀함', source: 'manual' };
+
+  it('chilly weather does not pick a spring/summer-only tee when a warmer top exists', () => {
+    const items = [
+      owned('tee', 'top', { seasonTags: ['spring', 'summer'], styleTags: ['minimal'] }),
+      owned('knit', 'top', { seasonTags: ['fall', 'winter'] }),
+      owned('jeans', 'bottom'),
+      owned('sneakers', 'shoes'),
+    ];
+    const r = recommend(base(items, { weather: chilly }));
+    if (r.kind !== 'ok') throw new Error();
+    expect(r.results[0].items.find((i) => i.category === 'top')!.key).toBe('owned:knit');
+  });
+
+  it('sample pool in chilly weather leads with a non-summer top', () => {
+    const r = recommend(base(candidatePool('withSamples', []), { weather: chilly }));
+    if (r.kind !== 'ok') throw new Error();
+    const top = r.results[0].items.find((i) => i.category === 'top')!;
+    expect(top.seasonTags.every((t) => t === 'spring' || t === 'summer')).toBe(false);
+  });
+
+  it('a recently saved/worn outfit signature is demoted', () => {
+    const items = [owned('a', 'top'), owned('b', 'top'), owned('j', 'bottom'), owned('s', 'shoes')];
+    const plain = recommend(base(items, { taste: { ...taste, preferredStyles: [] } }));
+    if (plain.kind !== 'ok') throw new Error();
+    const first = plain.results[0].signature;
+    const r = recommend(base(items, { taste: { ...taste, preferredStyles: [] }, recentOutfitSignatures: [first] }));
+    if (r.kind !== 'ok') throw new Error();
+    expect(r.results[0].signature).not.toBe(first);
+  });
+
+  it('refsSignature matches the engine signature format', () => {
+    expect(refsSignature([{ kind: 'sampleTemplate', templateId: 'jeans', customization: { colorId: 'denimBlue' } }, { kind: 'ownedGarment', garmentItemId: 'x' }])).toBe('owned:x|sample:jeans');
   });
 });

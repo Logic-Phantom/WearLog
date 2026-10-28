@@ -1,13 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
-import { AppText, ChipRow, EmptyState, ErrorState, ScreenScroll, SourceBadge, UnderlineTabs, contentMaxWidth, elevation, radius, spacing, touchTarget, useColors, wardrobeColumns } from '@/design-system';
+import { AppText, ChipRow, EmptyState, ErrorState, ScreenScroll, SearchField, SourceBadge, UnderlineTabs, contentMaxWidth, elevation, radius, spacing, touchTarget, useColors, wardrobeColumns } from '@/design-system';
 import { GARMENT_CATEGORIES, type GarmentCategory } from '@/domain/categories';
 import { ItemVisual } from '@/features/outfit-builder/components/ItemVisual';
 import { SAMPLE_TEMPLATES } from '@/features/sample-wardrobe/catalog';
 import { listGarments } from '@/features/wardrobe/garment-repository';
+import { WARDROBE_SORTS, queryWardrobe, type WardrobeSort } from '@/features/wardrobe/wardrobe-query';
+import { garmentWearStats } from '@/features/wear-log/wear-repository';
 import { useAppState } from '@/hooks/app-state';
 import { useAsync } from '@/hooks/use-async';
 
@@ -29,8 +31,13 @@ export default function WardrobeScreen() {
   const { dataVersion } = useAppState();
   const [tab, setTab] = useState<Tab | null>(null);
   const [cat, setCat] = useState<Cat>('all');
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<WardrobeSort>('recent');
   const owned = useAsync(() => listGarments(cat === 'all' ? null : cat), [cat, dataVersion]);
   const all = useAsync(() => listGarments(), [dataVersion]);
+  const wear = useAsync(garmentWearStats, [dataVersion]);
+  const visible = useMemo(() => (owned.data ? queryWardrobe(owned.data, query, sort, wear.data ?? new Map()) : null), [owned.data, query, sort, wear.data]);
+  const hasOwned = !!all.data?.length;
   // Until the user picks a tab, start where there is something to see.
   const shown: Tab = tab ?? (all.data && all.data.length === 0 ? 'sample' : 'owned');
 
@@ -48,11 +55,19 @@ export default function WardrobeScreen() {
           value={shown}
           onChange={setTab}
         />
+        {shown === 'owned' && hasOwned ? (
+          <>
+            <SearchField value={query} onChangeText={setQuery} placeholder="이름·브랜드·색상·메모 검색" accessibilityLabel="내 옷 검색" />
+            <ChipRow options={WARDROBE_SORTS} value={sort} onChange={setSort} />
+          </>
+        ) : null}
         <ChipRow options={CATS} value={cat} onChange={setCat} />
 
         {shown === 'owned' ? (
           owned.error ? (
             <ErrorState message={owned.error} onRetry={owned.reload} />
+          ) : visible && visible.length === 0 && query.trim() && owned.data?.length ? (
+            <EmptyState icon="search-outline" title="검색 결과가 없어요" message={`'${query.trim()}'에 맞는 옷이 없어요. 다른 단어로 찾아보세요.`} actionLabel="검색어 지우기" onAction={() => setQuery('')} />
           ) : owned.data && owned.data.length === 0 ? (
             <EmptyState
               icon="shirt-outline"
@@ -65,7 +80,7 @@ export default function WardrobeScreen() {
             />
           ) : (
             <View style={styles.grid}>
-              {(owned.data ?? []).map((g) => (
+              {(visible ?? []).map((g) => (
                 <Pressable key={g.id} onPress={() => router.push({ pathname: '/wardrobe/[itemId]', params: { itemId: g.id } })} accessibilityRole="button" accessibilityLabel={`${g.name}, 내 옷`} style={[styles.tile, { width: tile, backgroundColor: c.photoBackdrop }]}>
                   <ItemVisual itemRef={{ kind: 'ownedGarment', garmentItemId: g.id }} owned={g} size={tile} />
                 </Pressable>

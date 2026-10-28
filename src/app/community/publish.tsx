@@ -80,6 +80,7 @@ export default function PublishScreen() {
           <Checkbox checked={consent.imageIsPublic} label="이 사진이 누구에게나 공개돼요" onPress={() => setConsent({ ...consent, imageIsPublic: !consent.imageIsPublic })} />
           <Checkbox checked={consent.handleAndTagsArePublic} label="내 핸들과 선택한 태그가 함께 공개돼요" onPress={() => setConsent({ ...consent, handleAndTagsArePublic: !consent.handleAndTagsArePublic })} />
           <Checkbox checked={consent.visibleUntilDeleted} label="직접 삭제하기 전까지 공개될 수 있고, 운영 검토 후 노출돼요" onPress={() => setConsent({ ...consent, visibleUntilDeleted: !consent.visibleUntilDeleted })} />
+          <SecondaryButton compact label="커뮤니티 가이드라인 보기" onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'guidelines' } })} />
         </View>
         {error ? <InlineMessage tone="error" message={error} /> : null}
       </ScreenScroll>

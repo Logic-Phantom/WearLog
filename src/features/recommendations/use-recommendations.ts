@@ -2,14 +2,17 @@ import { useMemo } from 'react';
 
 import type { Occasion } from '@/domain/categories';
 import type { GarmentItem } from '@/domain/models';
+import { SIMILAR_OUTFIT_LOOKBACK_DAYS } from '@/domain/recommendation-policy';
+import { localDay } from '@/domain/wear';
+import { listOutfits } from '@/features/outfit-builder/outfit-repository';
 import { listGarments } from '@/features/wardrobe/garment-repository';
 import { resolveWeatherSignal } from '@/features/weather/weather-signal';
-import { garmentWearStats } from '@/features/wear-log/wear-repository';
+import { garmentWearStats, listWearsBetween } from '@/features/wear-log/wear-repository';
 import { useAppState } from '@/hooks/app-state';
 import { useAsync } from '@/hooks/use-async';
 
 import { recommend, type RecommendResult } from './engine';
-import { candidatePool, ownedToRecItem } from './rec-items';
+import { candidatePool, ownedToRecItem, refsSignature } from './rec-items';
 
 export type RecommendMode = 'ownedOnly' | 'withSamples';
 
@@ -18,8 +21,16 @@ export type RecommendMode = 'ownedOnly' | 'withSamples';
 export function useRecommendations(opts: { mode: RecommendMode; occasion: Occasion | null; excludedKeys: string[]; pinnedKeys: string[]; focus?: 'weather' | 'taste' }) {
   const { taste, weatherContext, weatherPrefs, dataVersion } = useAppState();
   const owned = useAsync(async () => {
-    const [items, stats] = await Promise.all([listGarments(), garmentWearStats()]);
-    return { items, stats };
+    const since = new Date(Date.now() - SIMILAR_OUTFIT_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
+    const [items, stats, outfits, wears] = await Promise.all([listGarments(), garmentWearStats(), listOutfits(), listWearsBetween(localDay(since), localDay(new Date()))]);
+    // Recently saved or worn outfits → similar-outfit penalty (same key format as engine signatures).
+    const signatures = new Set<string>();
+    for (const o of outfits) if (o.updatedAt >= since.toISOString()) signatures.add(refsSignature(o.itemRefs));
+    for (const w of wears) {
+      const o = w.outfitId ? outfits.find((x) => x.id === w.outfitId) : null;
+      signatures.add(o ? refsSignature(o.itemRefs) : refsSignature(w.garmentIds.map((id) => ({ kind: 'ownedGarment' as const, garmentItemId: id }))));
+    }
+    return { items, stats, signatures: [...signatures] };
   }, [dataVersion]);
 
   const ownedMap = useMemo(() => new Map<string, GarmentItem>((owned.data?.items ?? []).map((g) => [g.id, g])), [owned.data]);
@@ -36,7 +47,7 @@ export function useRecommendations(opts: { mode: RecommendMode; occasion: Occasi
       weatherEnabled: weatherPrefs.weatherRecommendationEnabled && opts.focus !== 'taste',
       excludedKeys: opts.excludedKeys,
       pinnedKeys: opts.pinnedKeys,
-      recentOutfitSignatures: [],
+      recentOutfitSignatures: owned.data.signatures,
     });
   }, [owned.data, opts.mode, opts.occasion, opts.excludedKeys, opts.pinnedKeys, opts.focus, taste, weather, weatherPrefs.weatherRecommendationEnabled]);
 

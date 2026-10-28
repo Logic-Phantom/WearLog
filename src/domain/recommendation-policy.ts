@@ -16,10 +16,14 @@ export const SCORE_WEIGHTS = {
   underusedItemBonus: 0.4,
   recentRepeatPenalty: 1.0,
   similarOutfitPenalty: 0.8,
+  /** Item whose season tags all fall in the band's `offSeasons` (e.g. a spring/summer tee when chilly). */
+  offSeasonPenalty: 1.5,
 } as const;
 
 /** Days an item counts as "recently worn" for the repeat penalty. */
 export const RECENT_WEAR_DAYS = 7;
+/** Outfits saved or worn within this many days count for the similar-outfit penalty. */
+export const SIMILAR_OUTFIT_LOOKBACK_DAYS = 14;
 /** Items not worn in this many days get the underused bonus. */
 export const UNDERUSED_DAYS = 30;
 
@@ -75,15 +79,20 @@ export interface BandRule {
   /** Acceptable user-entered outer weights (only checked when the item has one). */
   outerWeights: OuterWeight[];
   seasons: Season[];
+  /**
+   * An item is "off-season" when it has season tags and ALL of them are in this list.
+   * E.g. chilly → ['spring','summer'] catches a 반팔 티 (봄·여름) but not a shirt (봄·여름·가을).
+   */
+  offSeasons: Season[];
 }
 
 export const BAND_RULES: Record<TemperatureBand, BandRule> = {
-  freezing: { outer: 'required', outerWeights: ['heavy'], seasons: ['winter'] },
-  cold: { outer: 'required', outerWeights: ['medium', 'heavy'], seasons: ['winter', 'fall'] },
-  chilly: { outer: 'required', outerWeights: ['light', 'medium'], seasons: ['fall', 'spring'] },
-  mild: { outer: 'optional', outerWeights: ['light'], seasons: ['spring', 'fall'] },
-  warm: { outer: 'avoid', outerWeights: [], seasons: ['spring', 'summer'] },
-  hot: { outer: 'avoid', outerWeights: [], seasons: ['summer'] },
+  freezing: { outer: 'required', outerWeights: ['heavy'], seasons: ['winter'], offSeasons: ['spring', 'summer', 'fall'] },
+  cold: { outer: 'required', outerWeights: ['medium', 'heavy'], seasons: ['winter', 'fall'], offSeasons: ['spring', 'summer'] },
+  chilly: { outer: 'required', outerWeights: ['light', 'medium'], seasons: ['fall', 'spring'], offSeasons: ['spring', 'summer'] },
+  mild: { outer: 'optional', outerWeights: ['light'], seasons: ['spring', 'fall'], offSeasons: ['winter'] },
+  warm: { outer: 'avoid', outerWeights: [], seasons: ['spring', 'summer'], offSeasons: ['fall', 'winter'] },
+  hot: { outer: 'avoid', outerWeights: [], seasons: ['summer'], offSeasons: ['spring', 'fall', 'winter'] },
 };
 
 /** Outfit composition: required slots and the categories that may fill them (prompt §8.2). */

@@ -8,43 +8,11 @@ import { GARMENT_CATEGORIES, OCCASIONS, OUTER_WEIGHTS, PATTERNS, SEASONS, STYLE_
 import { toUserMessage } from '@/domain/errors';
 import type { GarmentItem } from '@/domain/models';
 import { GARMENT_COLORS, type ColorId } from '@/domain/palette';
-import { newId } from '@/utils/id';
 
 import { importFromProductLink, pickGarmentPhoto, storeGarmentPhoto, type PickedPhoto } from '../garment-import';
 import { saveGarment } from '../garment-repository';
 
-export function emptyGarment(): GarmentItem {
-  const now = new Date().toISOString();
-  return {
-    id: newId('g_'),
-    name: '',
-    category: 'top',
-    subcategory: null,
-    sourceType: 'manual',
-    originalUri: null,
-    thumbnailUri: null,
-    cutoutUri: null,
-    colorIds: ['black'],
-    pattern: 'solid',
-    fit: null,
-    seasonTags: [],
-    styleTags: [],
-    occasionTags: [],
-    outerWeight: null,
-    waterResistant: null,
-    brand: null,
-    sizeLabel: null,
-    purchasePriceMinor: null,
-    currency: 'KRW',
-    purchasedAt: null,
-    note: null,
-    status: 'active',
-    userVerifiedFields: [],
-    fromTemplateId: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-}
+export { emptyGarment } from '../garment-draft';
 
 const CATS = GARMENT_CATEGORIES.map((c) => ({ id: c.id, label: c.label }));
 
@@ -61,7 +29,13 @@ export function GarmentEditor({ initial, onSaved, initialPhoto = null, initialLi
   const [error, setError] = useState<string | null>(null);
   const [link, setLink] = useState(initialLink ?? '');
   const [linkBusy, setLinkBusy] = useState(false);
-  const [linkNote, setLinkNote] = useState<{ tone: 'success' | 'error'; text: string } | null>(initialPhoto ? { tone: 'success', text: '공유한 사진을 불러왔어요. 이름·카테고리를 골라 등록해 주세요.' } : null);
+  const [linkNote, setLinkNote] = useState<{ tone: 'success' | 'error'; text: string } | null>(
+    initialPhoto
+      ? { tone: 'success', text: '공유한 사진을 불러왔어요. 이름·카테고리를 골라 등록해 주세요.' }
+      : initial.sourceType === 'fromSample'
+        ? { tone: 'success', text: '샘플 정보를 채웠어요. 샘플 사진은 옮기지 않으니 내 옷 사진을 추가하고 가격·브랜드를 확인해 주세요.' }
+        : null,
+  );
   const [sheet, setSheet] = useState<'category' | 'pattern' | 'season' | 'weight' | 'occasion' | null>(null);
   const swatches = useMemo(() => GARMENT_COLORS.map((x) => ({ ...x, isLight: x.luminanceGroup === 2 })), []);
   const set = (patch: Partial<GarmentItem>) => setG((cur) => ({ ...cur, ...patch }));

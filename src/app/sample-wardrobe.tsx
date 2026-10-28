@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { AppText, BottomBar, Card, ChipRow, ColorSwatchRow, PrimaryButton, ScreenScroll, SecondaryButton, SegmentedControl, SourceBadge, radius, spacing, useColors } from '@/design-system';
+import { AppText, BottomBar, Card, ChipRow, ColorSwatchRow, GhostButton, PrimaryButton, ScreenScroll, SecondaryButton, SegmentedControl, SourceBadge, radius, spacing, useColors } from '@/design-system';
 import { FITS, GARMENT_CATEGORIES, PATTERNS, labelOf, type Fit, type GarmentCategory, type Pattern } from '@/domain/categories';
 import type { ItemRef, SampleCustomization } from '@/domain/models';
 import { GARMENT_COLORS, type ColorId } from '@/domain/palette';
@@ -83,6 +83,7 @@ export default function SampleWardrobeScreen() {
                   <ChipRow options={t.supportedPatterns.map((p) => ({ id: p, label: labelOf(PATTERNS, p) }))} value={custom.pattern ?? 'solid'} onChange={(p: Pattern) => setCustom({ ...custom, pattern: p })} />
                 ) : null}
                 <SecondaryButton label="캔버스에 담기" icon="add" onPress={() => setPicked([...picked, { itemRef: { kind: 'sampleTemplate', templateId: t.id, customization: custom }, category: t.category }])} />
+                <GhostButton label="비슷한 옷이 있어요 · 내 옷으로 등록" icon="shirt-outline" onPress={() => router.push({ pathname: '/wardrobe/add', params: { fromTemplate: t.id } })} />
               </View>
             </Card>
           </>

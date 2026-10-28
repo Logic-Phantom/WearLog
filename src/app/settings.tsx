@@ -43,6 +43,13 @@ export default function SettingsScreen() {
         <ListRow label="날씨 설정" onPress={() => router.push('/weather')} />
         <Divider />
         <ListRow label="커뮤니티 계정" onPress={() => router.push('/community/account')} />
+        <Divider />
+        <ListRow label="내 게시물 · 차단 목록" onPress={() => router.push('/community/mine')} />
+      </Card>
+      <Card padded={false}>
+        <ListRow label="개인정보 처리방침" onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'privacy' } })} />
+        <Divider />
+        <ListRow label="커뮤니티 가이드라인" onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'guidelines' } })} />
       </Card>
       <AppText variant="caption" tone="tertiary" style={{ paddingHorizontal: spacing.xs }}>
         옷장·사진·기록·취향은 이 기기에만 저장돼요. 로그인해도 자동으로 업로드되지 않아요.

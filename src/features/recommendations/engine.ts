@@ -93,11 +93,16 @@ function weatherItemScore(item: RecItem, input: RecommendInput): number {
   if (!input.weatherEnabled || !band || input.weather.indoor) return 0;
   const rule = BAND_RULES[band];
   let s = 0;
-  if (item.seasonTags.some((t) => rule.seasons.includes(t))) s += SCORE_WEIGHTS.seasonMatch;
+  if (isOffSeason(item, rule.offSeasons)) s -= SCORE_WEIGHTS.offSeasonPenalty;
+  else if (item.seasonTags.some((t) => rule.seasons.includes(t))) s += SCORE_WEIGHTS.seasonMatch;
   if (item.category === 'outer' && item.outerWeight) {
     s += rule.outerWeights.includes(item.outerWeight) ? SCORE_WEIGHTS.weatherFit * 0.5 : -SCORE_WEIGHTS.weatherFit * 0.5;
   }
   return s;
+}
+
+function isOffSeason(item: RecItem, offSeasons: Season[]): boolean {
+  return item.seasonTags.length > 0 && item.seasonTags.every((t) => offSeasons.includes(t));
 }
 
 function topByCategory(items: RecItem[], input: RecommendInput): Map<GarmentCategory, RecItem[]> {

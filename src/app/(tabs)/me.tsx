@@ -46,7 +46,7 @@ export default function MeScreen() {
         <MenuRow icon="file-tray-outline" label="내 옷장" onPress={() => router.push('/wardrobe')} />
         <MenuRow icon="time-outline" label="착용 기록" onPress={() => router.push('/wear-log')} />
         <MenuRow icon="heart-outline" label="베스트 착장" onPress={() => router.push('/community')} />
-        <MenuRow icon="create-outline" label="내가 쓴 글" onPress={() => router.push(session ? '/community' : '/community/account')} />
+        <MenuRow icon="create-outline" label="내가 쓴 글 · 차단 목록" onPress={() => router.push('/community/mine')} />
         <MenuRow icon="settings-outline" label="설정" onPress={() => router.push('/settings')} />
       </View>
 

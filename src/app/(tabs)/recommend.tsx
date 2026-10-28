@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, FilterChip, InlineMessage, PillSegment, PrimaryButton, Row, ScreenScroll, SourceBadge, radius, spacing, successFeedback, useColors } from '@/design-system';
 import { toUserMessage } from '@/domain/errors';
+import { GARMENT_CATEGORIES, labelOf } from '@/domain/categories';
 import type { Outfit } from '@/domain/models';
 import { MANUAL_WEATHER_OPTIONS } from '@/domain/recommendation-policy';
 import { OutfitBoard } from '@/features/outfit-builder/components/OutfitBoard';
@@ -14,6 +15,7 @@ import { useRecommendations, type RecommendMode } from '@/features/recommendatio
 import { isSnapshotFresh } from '@/features/weather/weather-signal';
 import { useAppState } from '@/hooks/app-state';
 import { newId } from '@/utils/id';
+import { josa } from '@/utils/korean';
 
 const NO_KEYS: string[] = [];
 
@@ -34,6 +36,7 @@ export default function RecommendScreen() {
   const owned = useRecommendations({ mode, occasion: null, excludedKeys: NO_KEYS, pinnedKeys: NO_KEYS, focus });
   const samples = useRecommendations({ mode: 'withSamples', occasion: null, excludedKeys: NO_KEYS, pinnedKeys: NO_KEYS, focus });
   const fallback = owned.result?.kind === 'notEnoughItems';
+  const missingLabel = owned.result?.kind === 'notEnoughItems' ? owned.result.missing.map((m) => labelOf(GARMENT_CATEGORIES, m)).join('·') : '상의·하의·신발';
   const result = fallback ? samples.result : owned.result;
   const list = result?.kind === 'ok' ? result.results : [];
   const rec = list.length ? list[index % list.length] : null;
@@ -139,7 +142,7 @@ export default function RecommendScreen() {
           </Row>
         </>
       ) : owned.loading ? null : (
-        <InlineMessage message="추천할 옷이 부족해요. 옷장에서 상의·하의·신발을 등록해 보세요." />
+        <InlineMessage message={`추천할 옷이 부족해요. 옷장에서 ${josa(missingLabel, '을', '를')} 등록해 보세요.`} />
       )}
 
       <View style={{ gap: spacing.xs }}>
@@ -151,7 +154,7 @@ export default function RecommendScreen() {
           <Row gap={6}>
             <SourceBadge source="sample" />
             <AppText variant="caption" tone="tertiary" style={{ flex: 1 }}>
-              내 옷이 부족해 샘플 옷으로 추천했어요
+              내 옷에 {josa(missingLabel, '이', '가')} 없어 샘플 옷으로 추천했어요
             </AppText>
           </Row>
         ) : null}

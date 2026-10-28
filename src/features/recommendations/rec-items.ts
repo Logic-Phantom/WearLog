@@ -1,14 +1,23 @@
-import type { GarmentItem, SampleGarmentTemplate } from '@/domain/models';
+import type { GarmentItem, ItemRef, SampleGarmentTemplate } from '@/domain/models';
 import { RECOMMENDABLE_SAMPLES } from '@/features/sample-wardrobe/catalog';
 
 import type { RecItem } from './engine';
+
+export function refKey(ref: ItemRef): string {
+  return ref.kind === 'ownedGarment' ? `owned:${ref.garmentItemId}` : `sample:${ref.templateId}`;
+}
+
+/** Same format as `signatureOf(items)` so saved/worn outfits can be compared with recommendations. */
+export function refsSignature(refs: ItemRef[]): string {
+  return [...new Set(refs.map(refKey))].sort().join('|');
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function ownedToRecItem(g: GarmentItem, lastWornDay: string | null, today: Date = new Date()): RecItem {
   const days = lastWornDay ? Math.floor((today.getTime() - new Date(`${lastWornDay}T00:00:00`).getTime()) / DAY_MS) : null;
   return {
-    key: `owned:${g.id}`,
+    key: refKey({ kind: 'ownedGarment', garmentItemId: g.id }),
     ref: { kind: 'ownedGarment', garmentItemId: g.id },
     name: g.name,
     category: g.category,

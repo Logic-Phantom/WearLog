@@ -65,3 +65,20 @@ export async function garmentWearStats(): Promise<Map<string, GarmentWearStats>>
   );
   return new Map(rows.map((r) => [r.id, { garmentId: r.id, wearCount: r.n, lastWornDay: r.last, cpw: computeCpw(r.price, r.n) }]));
 }
+
+/**
+ * Moves a wear to another day (착용 날짜 수정). The idempotency key embeds the date, so it is
+ * recomputed; if the same outfit/item-set is already recorded on the target day the move is
+ * refused ('duplicate') rather than silently merging or double-counting.
+ */
+export async function moveWear(eventId: string, newDate: ISODate): Promise<'moved' | 'duplicate' | 'notFound'> {
+  const db = await getDb();
+  const ev = await db.getFirstAsync<{ outfit_id: string | null }>('SELECT outfit_id FROM wear_events WHERE id = ?', eventId);
+  if (!ev) return 'notFound';
+  const items = await db.getAllAsync<{ garment_id: string }>('SELECT garment_id FROM wear_event_items WHERE wear_event_id = ?', eventId);
+  const key = wearIdempotencyKey(newDate, ev.outfit_id, items.map((i) => i.garment_id));
+  const clash = await db.getFirstAsync<{ id: string }>('SELECT id FROM wear_events WHERE idempotency_key = ? AND id != ?', key, eventId);
+  if (clash) return 'duplicate';
+  await db.runAsync('UPDATE wear_events SET date = ?, idempotency_key = ?, updated_at = ? WHERE id = ?', newDate, key, new Date().toISOString(), eventId);
+  return 'moved';
+}

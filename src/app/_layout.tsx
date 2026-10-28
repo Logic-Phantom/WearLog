@@ -91,6 +91,8 @@ export default function RootLayout() {
                 <Stack.Screen name="community/post/[postId]" options={{ title: '' }} />
                 <Stack.Screen name="auth/callback" options={{ title: '로그인 중', headerBackVisible: false }} />
                 <Stack.Screen name="settings" options={{ title: '설정' }} />
+                <Stack.Screen name="community/mine" options={{ title: '내 게시물 · 차단 목록' }} />
+                <Stack.Screen name="legal/[doc]" options={{ title: '' }} />
               </Stack>
             </AppStateProvider>
           </ThemeProvider>
