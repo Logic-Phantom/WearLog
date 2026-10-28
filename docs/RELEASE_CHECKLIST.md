@@ -22,15 +22,23 @@
 - [ ] **[소유자] 처리방침·약관 법률 검토** — 개인정보보호위원회 "개인정보 처리방침 작성지침" 기준 확인. Supabase 실제 리전에 맞게 `SERVER_LOCATION` 수정(현재 서울 가정).
 
 ## C. 연동 (Supabase · 카카오 · Google) — CutPick과 같은 구조
-코드(`supabase-community-repository.ts`, `social-auth.ts`, `auth/callback.tsx`, 마이그레이션, `weather-kma` Edge Function)는 있고 **실서버·콘솔 설정은 미진행**. 절차는 `docs/SOCIAL_AUTH_SETUP.md`.
-- [ ] Supabase 새 프로젝트 `wearlog`(Free, Seoul) — DB 비밀번호는 소유자가 생성·보관
-- [ ] SQL Editor에서 `supabase/migrations/20261026000000_community_init.sql` 실행
-- [ ] RLS 테스트 SQL 작성(CutPick `supabase/tests/rls_test.sql` 이식) → 실행·기록
-- [ ] Auth → URL Configuration: Redirect URLs `wearlog://**`, `exp://**`
+2026-10-28 콘솔 설정 완료(아래). 남은 것: 실기기 로그인 왕복, 날씨 Edge Function, 이메일 OTP 템플릿. 절차는 `docs/SOCIAL_AUTH_SETUP.md`.
+- [x] (2026-10-28) Supabase 조직 `WearLog`(Free, CutPick과 사용량 분리) + 프로젝트 `wearlog`(ref `ogudoghtgckuwbsyttsl`, Seoul ap-northeast-2). DB 비밀번호는 대시보드 생성기로 만들었고 어디에도 저장하지 않음 → 필요하면 Database 설정에서 재설정
+- [x] (2026-10-28) SQL Editor에서 `20261026000000_community_init.sql` 적용(성공)
+- [x] (2026-10-28) `supabase/tests/rls_test.sql` 실DB 실행 → **ALL_RLS_TESTS_PASSED**(15개 검사, 롤백). 실행 후 테스트 사용자 0·게시물 0·설정 기본값(승인제·하루 5건)·버킷 `outfit-images` 확인
+- [x] (2026-10-28) Redirect URLs `wearlog://**`, `exp://**`
 - [ ] Email 공급자(OTP 코드 템플릿에 `{{ .Token }}` — 커스텀 SMTP 필요)
-- [ ] 카카오 앱 생성 → 카카오 로그인 ON, Redirect URI `https://<ref>.supabase.co/auth/v1/callback`, 동의항목(닉네임 필수·프로필 사진/이메일 선택), 개인정보 국외이전 정보 등록 → REST API 키·Client Secret을 Supabase Kakao 공급자에 **소유자가 입력**
-- [ ] Google Cloud 프로젝트 `wearlog` → OAuth 동의 화면(외부) → 웹 클라이언트, 리디렉션 URI = Supabase 콜백 → Client ID·Secret을 Supabase Google 공급자에 **소유자가 입력** → 출시 전 "앱 게시"(프로덕션)
-- [ ] `.env.local`에 URL·publishable key(공개 값)
+- [x] (2026-10-28) 카카오 앱 `WearLog`(ID 1625699, 카테고리 라이프스타일, 아이콘 `assets/brand/kakao-icon-256.png`) 생성, 카카오 로그인 ON, REST API 키에 리다이렉트 URI `https://ogudoghtgckuwbsyttsl.supabase.co/auth/v1/callback`, 클라이언트 시크릿 활성(기본), 동의항목 닉네임 필수·프로필 사진 선택
+- [x] (2026-10-28, 키는 소유자 입력) Supabase Kakao 공급자 켬, "Allow users without an email" 켬
+- [x] (2026-10-28) 개인 개발자 비즈 앱 전환(소유자 본인인증) → 동의항목 카카오계정(이메일) 선택 동의(목적: 계정 식별·문의/삭제 시 본인 확인)
+- [x] 개인정보 국외이전 정보: **등록하지 않음** — 카카오 항목은 "해외 데이터센터에 저장하는 경우"용인데 WearLog 저장 위치는 서울(AWS ap-northeast-2). 수탁자 Supabase, Inc.(미국)는 처리방침 7항에 고지. Supabase 리전을 해외로 바꾸면 등록할 것. 법률 검토 때 함께 확인
+- [x] (2026-10-28) Google Cloud 프로젝트 `wearlog`(ID `wearlog-513004`), Google 인증 플랫폼(앱 이름 WearLog, 외부, 테스트 중), 웹 OAuth 클라이언트 "WearLog Supabase"(리디렉션 URI = Supabase 콜백)
+- [x] (2026-10-28, 키는 소유자 입력) Supabase Google 공급자 켬
+- [ ] (권장) Google 보안 비밀이 작업 대화에 평문으로 남음 → 콘솔에서 새 보안 비밀 추가 후 Supabase에 갱신, 기존 것 사용 중지
+- [x] (2026-10-28) 테스트 사용자 = 소유자 계정
+- [ ] 출시 전 Google 동의 화면 "앱 게시"(프로덕션), 브랜딩에 홈페이지·처리방침 URL
+- [x] (2026-10-28) 로그인 요청 확인: `/auth/v1/settings` kakao·google·email 모두 ON. `/authorize`가 카카오(scope `account_email profile_image profile_nickname`)·Google(`email profile`)로 올바른 client_id·콜백과 함께 이동, Chrome에서 카카오 동의 화면(KOE 오류 없음, WearLog 아이콘·필수/선택 항목 표시)·Google 계정 선택 화면(redirect_uri_mismatch 없음)까지 확인. 동의·로그인은 누르지 않음
+- [x] (2026-10-28) `.env.local`에 URL·publishable key(공개 값), `get_feed` RPC 200
 - [ ] `supabase secrets set KMA_SERVICE_KEY=...`(소유자) + `weather-kma` 배포, 공공데이터포털 활용신청(개발계정 일 10,000건)
 - [ ] 실기기에서 카카오·Google·이메일 로그인 왕복, 두 계정으로 게시→하트→신고→차단→삭제→계정 삭제
 

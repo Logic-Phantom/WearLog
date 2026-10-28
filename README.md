@@ -254,3 +254,19 @@ npx expo-doctor
 - 동의 체크박스는 서버 설정 시에만 보여 웹에서는 표시 확인 못 함(서버 미설정 상태).
 - 정책 문구 법률 검토, 상표 검색, 네이티브 서드파티 라이선스 정밀 감사.
 
+
+### 2026-10-28 — Supabase·카카오·Google 실제 연동 (Claude in Chrome)
+**만든 것 (콘솔, 소유자 계정)**
+- Supabase: 조직 `WearLog`(Free, CutPick과 사용량 분리) / 프로젝트 `wearlog`(ref `ogudoghtgckuwbsyttsl`, 서울). 스키마 마이그레이션 적용, Redirect URLs `wearlog://**`·`exp://**`. DB 비밀번호는 대시보드 생성기로 만들고 저장하지 않음(필요 시 재설정).
+- **RLS 실DB 테스트 통과**: `supabase/tests/rls_test.sql` 15개 검사 → `ALL_RLS_TESTS_PASSED`(롤백). 이후 테스트 사용자·게시물 0, 설정 기본값(승인제·하루 5건), 이미지 버킷 확인.
+- 카카오: 앱 `WearLog`(ID 1625699, 라이프스타일, 앱 아이콘 등록), 카카오 로그인 ON, 리다이렉트 URI = Supabase 콜백, 동의항목 닉네임 필수·프로필 사진 선택. 운영정책 확인 체크는 사용자 승인 후.
+- Google Cloud: 프로젝트 `wearlog-513004`, 인증 플랫폼(WearLog, 외부·테스트 중, 사용자 데이터 정책 동의는 사용자 승인 후), 웹 클라이언트 "WearLog Supabase"(리디렉션 URI = Supabase 콜백).
+- 앱 `.env.local`(git 제외)에 URL·publishable key. `/auth/v1/settings`·`get_feed` 응답 확인.
+
+**이어서 완료 (2026-10-28)**
+- 소유자가 Supabase에 카카오·Google 키 입력, 카카오 개인 개발자 비즈 앱 전환(본인인증).
+- 카카오 동의항목: 닉네임 필수, 프로필 사진·카카오계정(이메일) 선택. 개인정보 국외이전 정보는 저장 위치가 서울이라 등록하지 않음(사유는 RELEASE_CHECKLIST C).
+- Google 동의 화면 테스트 사용자 = 소유자 계정.
+- 확인: `/auth/v1/settings` email·kakao·google 모두 ON. Chrome에서 카카오 동의 화면(KOE205 없음)·Google 계정 선택 화면(redirect_uri_mismatch 없음)까지 열림 — 동의·로그인은 누르지 않음.
+
+**미검증**: 앱(실기기)에서 카카오·Google 로그인 끝까지 왕복 → 세션 → 핸들 만들기, 기상청 Edge Function 배포(`KMA_SERVICE_KEY` 필요), 이메일 OTP 템플릿(커스텀 SMTP 필요), 실기기 커뮤니티 흐름.
