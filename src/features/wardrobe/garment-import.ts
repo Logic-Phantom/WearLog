@@ -36,6 +36,16 @@ export async function pickGarmentPhoto(source: 'library' | 'camera'): Promise<Pi
 }
 
 /**
+ * Several photos at once (여러 장 한 번에 등록) from the OS picker — in selection order, no cropping
+ * (the picker can't crop multiple images). Each photo still goes through the editor.
+ */
+export async function pickGarmentPhotos(limit: number): Promise<PickedPhoto[]> {
+  const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1, exif: false, allowsMultipleSelection: true, selectionLimit: limit, orderedSelection: true });
+  if (res.canceled || !res.assets) return [];
+  return res.assets.map((a) => ({ uri: a.uri, width: a.width, height: a.height }));
+}
+
+/**
  * Stores derived copies (working JPEG + thumbnail) in the garment's app folder. The picked source
  * is only read. Background removal / segmentation is NOT done here — that waits for the Phase 0
  * vision POC (docs/VISION_POC.md); the UI says "자동 분석 미지원".
@@ -66,7 +76,7 @@ export async function importFromProductLink(input: string): Promise<LinkImport> 
   if (!url) throw new AppError('validation', '상품 페이지 링크(https://…)를 붙여 넣어 주세요.');
   // Instagram pages sit behind a login wall and its terms forbid automated reading (D-018).
   if (/(^|\.)(instagram\.com|instagr\.am)$/i.test(new URL(url).hostname)) {
-    throw new AppError('validation', '인스타그램 게시물은 링크로 가져올 수 없어요. 사진을 기기에 저장한 뒤 위의 사진 추가로 올려 주세요.');
+    throw new AppError('validation', '인스타그램 게시물은 링크로 가져올 수 없어요. 사진을 기기에 저장한 뒤 「여러 장 한 번에 등록」이나 사진 추가로 올려 주세요.');
   }
   const meta = parseProductMeta(await fetchPageHtml(url), url);
   if (!meta.imageUrl) throw new AppError('link-unreadable');

@@ -25,7 +25,11 @@
 ## 확인이 필요한 항목 (소유자 작업, 미검증)
 - [ ] 공공데이터포털 활용신청 → 개발/운영 계정 트래픽 한도 확인 및 기록
 - [ ] 이용허락범위·출처표시 문구 확인(현재 UI: "출처 기상청")
-- [ ] Edge Function 배포 후 실제 응답으로 필드·base_time 계산 검증(`vilageBase`/`ncstBase`)
+- [x] (2026-10-28) Edge Function 배포(JWT 검증 유지, 키 미설정 시 503 확인, D-028)
+- [x] (2026-10-28) `KMA_SERVICE_KEY` 저장(소유자). 함수가 키를 읽음(503 → 502로 바뀜)
+- [ ] **기상청이 키를 아직 인식하지 않음**: 로그 `kma-http-403-reason-30` = SERVICE_KEY_IS_NOT_REGISTERED_ERROR. 활용신청이 오늘 연장 처리돼 동기화 대기(보통 최대 1시간)일 가능성 → 공공데이터포털 API 상세의 "조회하기"(미리보기)로 키 자체를 먼저 확인하고, 1시간 뒤에도 같으면 키 값을 다시 복사해 저장
+- [ ] 200 응답 후 필드·base_time 계산 검증(`vilageBase`/`ncstBase`)
+- 함수 보강(2026-10-28 재배포): Encoding 키를 넣어도 자동 복원(`%` 포함 시 decode), 오류 로그에 data.go.kr `returnReasonCode` 포함(키는 기록하지 않음). 30=미등록 키, 22=일일 한도 초과, 12=서비스 없음
 - [ ] 동시 사용자 증가 시 격자 단위 서버 캐시 필요 여부(현재 `Cache-Control: max-age=600`만)
 - [ ] 무료 Supabase Edge Function 호출 한도 → `docs/COSTS_AND_DISTRIBUTION.md`
 

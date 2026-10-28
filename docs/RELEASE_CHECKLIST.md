@@ -27,7 +27,7 @@
 - [x] (2026-10-28) SQL Editor에서 `20261026000000_community_init.sql` 적용(성공)
 - [x] (2026-10-28) `supabase/tests/rls_test.sql` 실DB 실행 → **ALL_RLS_TESTS_PASSED**(15개 검사, 롤백). 실행 후 테스트 사용자 0·게시물 0·설정 기본값(승인제·하루 5건)·버킷 `outfit-images` 확인
 - [x] (2026-10-28) Redirect URLs `wearlog://**`, `exp://**`
-- [ ] Email 공급자(OTP 코드 템플릿에 `{{ .Token }}` — 커스텀 SMTP 필요)
+- [ ] **[소유자]** 커스텀 SMTP 연결(비밀번호 필요) → 템플릿 2종에 `{{ .Token }}` — 절차·문구 `docs/EMAIL_OTP_SETUP.md`. SMTP 바꾸면 `MAIL_SENDER` 수정
 - [x] (2026-10-28) 카카오 앱 `WearLog`(ID 1625699, 카테고리 라이프스타일, 아이콘 `assets/brand/kakao-icon-256.png`) 생성, 카카오 로그인 ON, REST API 키에 리다이렉트 URI `https://ogudoghtgckuwbsyttsl.supabase.co/auth/v1/callback`, 클라이언트 시크릿 활성(기본), 동의항목 닉네임 필수·프로필 사진 선택
 - [x] (2026-10-28, 키는 소유자 입력) Supabase Kakao 공급자 켬, "Allow users without an email" 켬
 - [x] (2026-10-28) 개인 개발자 비즈 앱 전환(소유자 본인인증) → 동의항목 카카오계정(이메일) 선택 동의(목적: 계정 식별·문의/삭제 시 본인 확인)
@@ -39,7 +39,8 @@
 - [ ] 출시 전 Google 동의 화면 "앱 게시"(프로덕션), 브랜딩에 홈페이지·처리방침 URL
 - [x] (2026-10-28) 로그인 요청 확인: `/auth/v1/settings` kakao·google·email 모두 ON. `/authorize`가 카카오(scope `account_email profile_image profile_nickname`)·Google(`email profile`)로 올바른 client_id·콜백과 함께 이동, Chrome에서 카카오 동의 화면(KOE 오류 없음, WearLog 아이콘·필수/선택 항목 표시)·Google 계정 선택 화면(redirect_uri_mismatch 없음)까지 확인. 동의·로그인은 누르지 않음
 - [x] (2026-10-28) `.env.local`에 URL·publishable key(공개 값), `get_feed` RPC 200
-- [ ] `supabase secrets set KMA_SERVICE_KEY=...`(소유자) + `weather-kma` 배포, 공공데이터포털 활용신청(개발계정 일 10,000건)
+- [x] (2026-10-28) `weather-kma` Edge Function 배포(대시보드), JWT 검증 유지 — 앱과 같은 호출로 503 `not_configured`(키 전) 확인
+- [ ] **[소유자]** 공공데이터포털 로그인 → 기상청_단기예보 조회서비스(15084084) **활용신청**(자동승인) → 마이페이지에서 **일반 인증키(Decoding)** 복사 → Supabase → Edge Functions → **Secrets** → `KMA_SERVICE_KEY` 추가 → 함수 재호출로 200 확인
 - [ ] 실기기에서 카카오·Google·이메일 로그인 왕복, 두 계정으로 게시→하트→신고→차단→삭제→계정 삭제
 
 ## D. 스토어

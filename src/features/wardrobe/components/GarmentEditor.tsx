@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText, BottomBar, BottomSheet, InlineMessage, MultiChips, PrimaryButton, Row, ScreenScroll, SecondaryButton, TextField, ValueRow, bottomBarMaxHeight, elevation, radius, spacing, useColors } from '@/design-system';
@@ -20,7 +20,14 @@ const CATS = GARMENT_CATEGORIES.map((c) => ({ id: c.id, label: c.label }));
  * Add/edit form (showcase 옷 등록: photo box, 카테고리 › / 색상 ●●● / 패턴 › / 계절 › rows, 등록하기; prompt §3.3 A/C). Every attribute is chosen by the user — no analyzer is wired
  * yet, so nothing is auto-filled and nothing is labeled "AI". Price is optional (CPW needs it).
  */
-export function GarmentEditor({ initial, onSaved, initialPhoto = null, initialLink = null }: { initial: GarmentItem; onSaved: (g: GarmentItem) => void; initialPhoto?: PickedPhoto | null; initialLink?: string | null }) {
+export function GarmentEditor({ initial, onSaved, initialPhoto = null, initialLink = null, header = null }: {
+  initial: GarmentItem;
+  onSaved: (g: GarmentItem) => void;
+  initialPhoto?: PickedPhoto | null;
+  initialLink?: string | null;
+  /** Shown above the photo box (옷 등록: "여러 장 한 번에" entry / batch progress). */
+  header?: ReactNode;
+}) {
   const c = useColors();
   const [g, setG] = useState<GarmentItem>(initial);
   const [photo, setPhoto] = useState<PickedPhoto | null>(initialPhoto);
@@ -114,6 +121,7 @@ export function GarmentEditor({ initial, onSaved, initialPhoto = null, initialLi
   return (
     <View style={{ flex: 1, backgroundColor: c.background }}>
       <ScreenScroll withBottomBar contentContainerStyle={{ padding: spacing.md, gap: 0, paddingBottom: bottomBarMaxHeight + spacing.xxl }}>
+        {header}
         <Pressable
           onPress={() => Alert.alert('옷 사진', undefined, [{ text: '사진 선택', onPress: () => pick('library') }, { text: '촬영', onPress: () => pick('camera') }, { text: '취소', style: 'cancel' }])}
           accessibilityRole="button"

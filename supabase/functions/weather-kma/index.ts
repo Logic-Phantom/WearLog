@@ -1,6 +1,6 @@
 // WearLog weather proxy — 기상청 단기예보 조회서비스 (data.go.kr 15084084).
 // Deploy: supabase functions deploy weather-kma
-// Secret:  supabase secrets set KMA_SERVICE_KEY=<공공데이터포털 일반 인증키(Decoding)>
+// Secret:  supabase secrets set KMA_SERVICE_KEY=<공공데이터포털 일반 인증키 (Decoding 권장, Encoding도 자동 처리)>
 // The service key never ships in the app. The app sends only the 5 km grid index (nx, ny).
 // Response shape is validated client-side by parseKmaProxyResponse (src/infrastructure/weather-providers).
 // Logs never include nx/ny or the key.
@@ -39,7 +39,11 @@ async function call(op: string, key: string, base: { date: string; time: string 
   const t = setTimeout(() => ctrl.abort(), 6000);
   try {
     const res = await fetch(`${BASE}/${op}?${qs}`, { signal: ctrl.signal });
-    if (!res.ok) throw new Error(`kma-http-${res.status}`);
+    if (!res.ok) {
+      // data.go.kr explains auth failures in the body (e.g. 30 = SERVICE_KEY_IS_NOT_REGISTERED_ERROR). Never logs the key.
+      const reason = (await res.text().catch(() => '')).match(/returnReasonCode"?\s*[:>]\s*"?(\d+)/)?.[1];
+      throw new Error(`kma-http-${res.status}${reason ? `-reason-${reason}` : ''}`);
+    }
     const json = await res.json();
     const code = json?.response?.header?.resultCode;
     if (code !== '00') throw new Error(`kma-result-${code}`);
@@ -85,7 +89,9 @@ function slot(fcst: Item[], date: string, time: string) {
 }
 
 Deno.serve(async (req) => {
-  const key = Deno.env.get('KMA_SERVICE_KEY');
+  // Accept either portal key form: the "Encoding" key is URL-encoded and would be encoded twice by URLSearchParams.
+  const raw = Deno.env.get('KMA_SERVICE_KEY')?.trim();
+  const key = raw && raw.includes('%') ? decodeURIComponent(raw) : raw;
   if (!key) return new Response(JSON.stringify({ error: 'not_configured' }), { status: 503 });
   const u = new URL(req.url);
   const nx = Number(u.searchParams.get('nx'));
