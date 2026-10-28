@@ -20,13 +20,15 @@ const CATS = GARMENT_CATEGORIES.map((c) => ({ id: c.id, label: c.label }));
  * Add/edit form (showcase 옷 등록: photo box, 카테고리 › / 색상 ●●● / 패턴 › / 계절 › rows, 등록하기; prompt §3.3 A/C). Every attribute is chosen by the user — no analyzer is wired
  * yet, so nothing is auto-filled and nothing is labeled "AI". Price is optional (CPW needs it).
  */
-export function GarmentEditor({ initial, onSaved, initialPhoto = null, initialLink = null, header = null }: {
+export function GarmentEditor({ initial, onSaved, initialPhoto = null, initialLink = null, header = null, initialPhotoNote = '공유한 사진을 불러왔어요. 이름·카테고리를 골라 등록해 주세요.' }: {
   initial: GarmentItem;
   onSaved: (g: GarmentItem) => void;
   initialPhoto?: PickedPhoto | null;
   initialLink?: string | null;
   /** Shown above the photo box (옷 등록: "여러 장 한 번에" entry / batch progress). */
   header?: ReactNode;
+  /** Message shown when `initialPhoto` is pre-filled (share vs. batch import). */
+  initialPhotoNote?: string;
 }) {
   const c = useColors();
   const [g, setG] = useState<GarmentItem>(initial);
@@ -38,7 +40,7 @@ export function GarmentEditor({ initial, onSaved, initialPhoto = null, initialLi
   const [linkBusy, setLinkBusy] = useState(false);
   const [linkNote, setLinkNote] = useState<{ tone: 'success' | 'error'; text: string } | null>(
     initialPhoto
-      ? { tone: 'success', text: '공유한 사진을 불러왔어요. 이름·카테고리를 골라 등록해 주세요.' }
+      ? { tone: 'success', text: initialPhotoNote }
       : initial.sourceType === 'fromSample'
         ? { tone: 'success', text: '샘플 정보를 채웠어요. 샘플 사진은 옮기지 않으니 내 옷 사진을 추가하고 가격·브랜드를 확인해 주세요.' }
         : null,

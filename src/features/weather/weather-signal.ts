@@ -4,6 +4,7 @@
  */
 import type { ManualWeather, WeatherContext, WeatherSnapshot } from '@/domain/models';
 import {
+  DAILY_RANGE_LAYER_THRESHOLD_C,
   MANUAL_WEATHER_OPTIONS,
   RAIN_PROBABILITY_THRESHOLD_PCT,
   WINDY_THRESHOLD_MPS,
@@ -20,6 +21,10 @@ export interface WeatherSignal {
   /** e.g. "현재 12°C · 체감 9°C · 오후 강수확률 60%" — only fields that exist. */
   summary: string | null;
   source: 'snapshot' | 'manual' | 'none';
+  /** Provider low/high when the 일교차 reaches DAILY_RANGE_LAYER_THRESHOLD_C (never estimated). */
+  layering?: { minC: number; maxC: number } | null;
+  /** Provider wind speed, quoted in the wind reason. */
+  windSpeedMps?: number | null;
 }
 
 const PERIOD_KO = { now: '현재', morning: '오전', afternoon: '오후', evening: '저녁' } as const;
@@ -61,6 +66,7 @@ export function resolveWeatherSignal(ctx: WeatherContext, now: Date = new Date()
   const basis = s.apparentTemperatureSource === 'provider' && s.apparentTemperatureC != null ? s.apparentTemperatureC : s.temperatureC;
   const rainByType = s.precipitationType != null && s.precipitationType !== 'none';
   const rainByProb = s.precipitationProbabilityPct != null && s.precipitationProbabilityPct >= RAIN_PROBABILITY_THRESHOLD_PCT;
+  const range = s.minTemperatureC != null && s.maxTemperatureC != null ? s.maxTemperatureC - s.minTemperatureC : null;
   return {
     band: basis != null ? temperatureBand(basis) : null,
     rainLikely: rainByType || rainByProb,
@@ -68,6 +74,8 @@ export function resolveWeatherSignal(ctx: WeatherContext, now: Date = new Date()
     indoor: false,
     summary: snapshotSummary(s),
     source: 'snapshot',
+    layering: range != null && range >= DAILY_RANGE_LAYER_THRESHOLD_C ? { minC: s.minTemperatureC!, maxC: s.maxTemperatureC! } : null,
+    windSpeedMps: s.windSpeedMps,
   };
 }
 

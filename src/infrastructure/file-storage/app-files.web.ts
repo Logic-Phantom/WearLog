@@ -4,8 +4,8 @@
  */
 export type GarmentFileKind = 'original' | 'thumb' | 'cutout';
 
-export async function persistGarmentFile(tempUri: string, _garmentId: string, kind: GarmentFileKind, base64?: string): Promise<string> {
-  if (base64) return `data:image/${kind === 'cutout' ? 'png' : 'jpeg'};base64,${base64}`;
+export async function persistGarmentFile(tempUri: string, _garmentId: string, kind: GarmentFileKind, base64?: string, format?: 'jpeg' | 'png'): Promise<string> {
+  if (base64) return `data:image/${format ?? (kind === 'cutout' ? 'png' : 'jpeg')};base64,${base64}`;
   return tempUri;
 }
 

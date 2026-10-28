@@ -32,20 +32,22 @@ export interface RenderedJpeg {
 }
 
 /** Downscales an image to a JPEG. Output has no EXIF block from the source (re-encoded bitmap). */
-export async function renderJpeg(
-  uri: string,
-  size: Size,
-  maxSide: number,
-  quality: number,
-  withBase64 = false,
-): Promise<RenderedJpeg> {
+export function renderJpeg(uri: string, size: Size, maxSide: number, quality: number, withBase64 = false): Promise<RenderedJpeg> {
+  return renderImage(uri, size, maxSide, quality, withBase64, 'jpeg');
+}
+
+/**
+ * Downscales and re-encodes (no EXIF carried over). `png` keeps transparency — use it for sources
+ * that may have an alpha channel (PNG/WebP product cut-outs), which JPEG would turn black.
+ */
+export async function renderImage(uri: string, size: Size, maxSide: number, quality: number, withBase64: boolean, format: 'jpeg' | 'png'): Promise<RenderedJpeg> {
   let ctx: ImageManipulatorContext | null = null;
   let ref: ImageRef | null = null;
   try {
     ctx = ImageManipulator.manipulate(uri);
     ctx.resize(fitLongestSide(size, maxSide));
     ref = await ctx.renderAsync();
-    const out = await ref.saveAsync({ format: SaveFormat.JPEG, compress: quality, base64: withBase64 });
+    const out = await ref.saveAsync({ format: format === 'png' ? SaveFormat.PNG : SaveFormat.JPEG, compress: quality, base64: withBase64 });
     return { uri: out.uri, width: out.width, height: out.height, base64: out.base64 };
   } catch (e) {
     throw new AppError('decode-failed', undefined, e);

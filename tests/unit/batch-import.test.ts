@@ -1,4 +1,5 @@
 import { BATCH_LIMIT, advanceBatch, batchLabel, batchSummary, startBatch } from '@/features/wardrobe/batch-import';
+import { mayHaveAlpha } from '@/features/wardrobe/garment-import';
 
 const photo = (i: number) => ({ uri: `file:///p${i}.jpg`, width: 100, height: 100 });
 
@@ -22,5 +23,15 @@ describe('batch import queue', () => {
   it('summarizes the result', () => {
     expect(batchSummary(3, 0)).toBe('3벌을 등록했어요.');
     expect(batchSummary(2, 1)).toBe('2벌 등록, 1장 건너뛰었어요.');
+  });
+});
+
+describe('mayHaveAlpha', () => {
+  it('keeps transparency only for PNG/WebP sources', () => {
+    expect(mayHaveAlpha({ uri: 'file:///x/import-1.png' })).toBe(true);
+    expect(mayHaveAlpha({ uri: 'blob:http://localhost/abc', mimeType: 'image/webp' })).toBe(true);
+    expect(mayHaveAlpha({ uri: 'data:image/png;base64,AAAA' })).toBe(true);
+    expect(mayHaveAlpha({ uri: 'file:///x/photo.jpg', mimeType: 'image/jpeg' })).toBe(false);
+    expect(mayHaveAlpha({ uri: 'ph://ABC', mimeType: null })).toBe(false);
   });
 });

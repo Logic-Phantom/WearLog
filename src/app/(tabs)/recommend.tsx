@@ -12,6 +12,9 @@ import { OutfitBoard } from '@/features/outfit-builder/components/OutfitBoard';
 import { autoLayout } from '@/features/outfit-builder/canvas-state';
 import { saveOutfit } from '@/features/outfit-builder/outfit-repository';
 import { useRecommendations, type RecommendMode } from '@/features/recommendations/use-recommendations';
+import { OutfitBreakdown } from '@/features/recommendations/components/OutfitBreakdown';
+import { OutfitGuideCard } from '@/features/weather/components/OutfitGuideCard';
+import { TempRangeBar } from '@/features/weather/components/TempRangeBar';
 import { isSnapshotFresh } from '@/features/weather/weather-signal';
 import { useAppState } from '@/hooks/app-state';
 import { newId } from '@/utils/id';
@@ -105,6 +108,11 @@ export default function RecommendScreen() {
             </Pressable>
           </Row>
 
+          {focus === 'weather' && fresh?.temperatureC != null && fresh.minTemperatureC != null && fresh.maxTemperatureC != null ? (
+            <TempRangeBar nowC={fresh.temperatureC} minC={fresh.minTemperatureC} maxC={fresh.maxTemperatureC} />
+          ) : null}
+          {focus === 'weather' ? <OutfitGuideCard weather={owned.weather} compact /> : null}
+          <OutfitBreakdown rec={rec} owned={owned.ownedMap} />
           <View style={[styles.divider, { backgroundColor: c.border }]} />
 
           <View style={{ gap: spacing.sm }}>

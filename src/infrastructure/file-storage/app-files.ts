@@ -16,8 +16,8 @@ function dir(...parts: string[]): Directory {
 }
 
 /** Moves a temporary manipulator output into the garment's folder; returns the persistent URI. */
-export async function persistGarmentFile(tempUri: string, garmentId: string, kind: GarmentFileKind, _base64?: string): Promise<string> {
-  const ext = kind === 'cutout' ? 'png' : 'jpg';
+export async function persistGarmentFile(tempUri: string, garmentId: string, kind: GarmentFileKind, _base64?: string, format?: 'jpeg' | 'png'): Promise<string> {
+  const ext = (format ?? (kind === 'cutout' ? 'png' : 'jpeg')) === 'png' ? 'png' : 'jpg';
   const target = new File(dir('garments', garmentId), `${kind}.${ext}`);
   if (target.exists) target.delete();
   await new File(tempUri).move(target);

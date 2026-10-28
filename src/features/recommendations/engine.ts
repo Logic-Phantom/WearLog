@@ -3,9 +3,9 @@
  * Every reason in the output corresponds to a rule that actually changed the score.
  * Weights and thresholds: src/domain/recommendation-policy.ts.
  */
-import { STYLE_TAGS, labelOf, type GarmentCategory, type Occasion, type OuterWeight, type Season, type StyleTag } from '@/domain/categories';
+import { SEASONS, STYLE_TAGS, labelOf, type GarmentCategory, type Occasion, type OuterWeight, type Season, type StyleTag } from '@/domain/categories';
 import type { ItemRef, TasteProfile } from '@/domain/models';
-import { harmonyRule } from '@/domain/palette';
+import { getColor, harmonyRule } from '@/domain/palette';
 import {
   BAND_RULES,
   MAX_CANDIDATES_PER_CATEGORY,
@@ -15,6 +15,8 @@ import {
   SCORE_WEIGHTS,
   UNDERUSED_DAYS,
   bandLabel,
+  temperatureBand,
+  type BandRule,
   type TemperatureBand,
 } from '@/domain/recommendation-policy';
 import type { WeatherSignal } from '@/features/weather/weather-signal';
@@ -60,6 +62,11 @@ export interface Recommendation {
   /** Neutral hints, e.g. a missing outer in cold weather (prompt §3.8 — no shopping push). */
   gaps: string[];
   signature: string;
+  /**
+   * Short "why this piece" tag per item key (e.g. "일교차 대비 겉옷"), for the visual breakdown.
+   * Only from rules that actually applied to this outfit; items with nothing to say have no entry.
+   */
+  itemNotes: Record<string, string>;
 }
 
 export type RecommendResult =
@@ -88,10 +95,40 @@ function itemScore(item: RecItem, input: RecommendInput): { score: number; reaso
   return { score, reasons };
 }
 
+type OuterRule = BandRule['outer'];
+/** 일교차·바람 move the outer requirement up one level (policy: WINDY_THRESHOLD_MPS, DAILY_RANGE_LAYER_THRESHOLD_C). */
+const NUDGE_UP: Record<OuterRule, OuterRule> = { avoid: 'optional', optional: 'required', required: 'required' };
+
+interface ActiveRule extends BandRule {
+  band: TemperatureBand;
+  /** Why `outer` was raised above the band's own rule, if it was. */
+  nudge: 'layering' | 'wind' | null;
+}
+
+/** The weather rule actually applied: band rule, raised for a big 일교차 or strong wind. */
+function activeRule(input: RecommendInput): ActiveRule | null {
+  const w = input.weather;
+  if (!input.weatherEnabled || w.indoor || !w.band) return null;
+  const base = BAND_RULES[w.band];
+  const nudge = w.layering ? 'layering' : w.windy ? 'wind' : null;
+  const raised = nudge ? NUDGE_UP[base.outer] : base.outer;
+  // A big swing makes the colder end's outer weights acceptable too (light jacket → medium).
+  const cold = w.layering ? BAND_RULES[temperatureBand(w.layering.minC)] : null;
+  return {
+    ...base,
+    band: w.band,
+    outer: raised,
+    outerWeights: cold ? [...new Set([...base.outerWeights, ...cold.outerWeights])] : base.outerWeights,
+    nudge: raised !== base.outer ? nudge : null,
+  };
+}
+
+const isLight = (i: RecItem) => getColor(i.colorIds[0] ?? '')?.luminanceGroup === 2;
+const RAIN_SENSITIVE: GarmentCategory[] = ['bottom', 'shoes'];
+
 function weatherItemScore(item: RecItem, input: RecommendInput): number {
-  const band = input.weather.band;
-  if (!input.weatherEnabled || !band || input.weather.indoor) return 0;
-  const rule = BAND_RULES[band];
+  const rule = activeRule(input);
+  if (!rule) return 0;
   let s = 0;
   if (isOffSeason(item, rule.offSeasons)) s -= SCORE_WEIGHTS.offSeasonPenalty;
   else if (item.seasonTags.some((t) => rule.seasons.includes(t))) s += SCORE_WEIGHTS.seasonMatch;
@@ -142,8 +179,9 @@ export function recommend(input: RecommendInput): RecommendResult {
   const missing = OUTFIT_SLOTS.filter((s) => s.required && !s.categories.some((c) => byCat.get(c)?.length)).map((s) => s.categories[0]);
   if (missing.length) return { kind: 'notEnoughItems', missing };
 
-  const band = input.weatherEnabled && !input.weather.indoor ? input.weather.band : null;
-  const rule = band ? BAND_RULES[band] : null;
+  const rule = activeRule(input);
+  // Rain: only claim "darker colors were chosen" when light bottoms/shoes were actually available.
+  const rainAvoidedLight = input.weatherEnabled && input.weather.rainLikely && RAIN_SENSITIVE.some((c) => byCat.get(c)?.some(isLight));
 
   const required = OUTFIT_SLOTS.filter((s) => s.required).map((s) => byCat.get(s.categories[0])!);
   const outers = byCat.get('outer') ?? [];
@@ -158,7 +196,7 @@ export function recommend(input: RecommendInput): RecommendResult {
       const items = [...base, ...(outer ? [outer] : [])];
       // Accessories: add the single best one per category if it helps, never forced.
       for (const extra of [hats[0], bags[0]]) if (extra && itemScore(extra, input).score > 0) items.push(extra);
-      results.push(scoreOutfit(items, input, band, rule?.outer ?? null, outers.length > 0));
+      results.push(scoreOutfit(items, input, rule, outers.length > 0, rainAvoidedLight));
     }
   }
 
@@ -170,7 +208,7 @@ export function recommend(input: RecommendInput): RecommendResult {
   return { kind: 'ok', results: ranked };
 }
 
-function scoreOutfit(items: RecItem[], input: RecommendInput, band: TemperatureBand | null, outerRule: 'required' | 'optional' | 'avoid' | null, hasAnyOuter: boolean): Recommendation {
+function scoreOutfit(items: RecItem[], input: RecommendInput, rule: ActiveRule | null, hasAnyOuter: boolean, rainAvoidedLight: boolean): Recommendation {
   const reasons: Reason[] = [];
   const gaps: string[] = [];
   let score = 0;
@@ -194,18 +232,28 @@ function scoreOutfit(items: RecItem[], input: RecommendInput, band: TemperatureB
 
   if (input.weatherEnabled && input.weather.summary && input.weather.source !== 'none') {
     const hasOuter = items.some((i) => i.category === 'outer');
-    if (band && outerRule === 'required') {
+    const w = input.weather;
+    if (rule && rule.outer === 'required') {
       if (hasOuter) {
         score += SCORE_WEIGHTS.weatherFit;
-        reasons.push({ code: 'weatherOuter', text: `${bandLabel(band)} 날씨라 등록된 아우터를 포함했어요` });
+        const text =
+          rule.nudge === 'layering' && w.layering
+            ? `일교차가 커서(최저 ${Math.round(w.layering.minC)}° / 최고 ${Math.round(w.layering.maxC)}°) 벗고 입기 쉬운 아우터를 포함했어요`
+            : rule.nudge === 'wind'
+              ? `바람이 강해${w.windSpeedMps != null ? `(초속 ${Math.round(w.windSpeedMps)}m)` : ''} 아우터를 포함했어요`
+              : `${bandLabel(rule.band)} 날씨라 등록된 아우터를 포함했어요`;
+        reasons.push({ code: 'weatherOuter', text });
       } else if (!hasAnyOuter) {
-        gaps.push('이 날씨에는 아우터가 있으면 좋아요');
+        gaps.push(rule.nudge === 'layering' ? '일교차가 커서 걸칠 아우터가 있으면 좋아요' : rule.nudge === 'wind' ? '바람이 강해 아우터가 있으면 좋아요' : '이 날씨에는 아우터가 있으면 좋아요');
       }
     }
-    if (input.weather.rainLikely) {
+    if (w.rainLikely) {
       const wr = items.some((i) => i.waterResistant === true);
       reasons.push({ code: 'rain', text: wr ? '비 예보가 있어 방수로 기록된 아이템을 포함했어요' : '비 예보가 있어 우산을 챙기는 편이 좋아요' });
       if (wr) score += SCORE_WEIGHTS.weatherFit * 0.5;
+      const light = items.filter((i) => RAIN_SENSITIVE.includes(i.category) && isLight(i));
+      score -= SCORE_WEIGHTS.rainLightColorPenalty * light.length;
+      if (rainAvoidedLight && light.length === 0) reasons.push({ code: 'rainColor', text: '비 예보가 있어 밝은 색 하의·신발 대신 어두운 색을 골랐어요' });
     }
     reasons.unshift({ code: 'weather', text: input.weather.summary });
   }
@@ -213,7 +261,32 @@ function scoreOutfit(items: RecItem[], input: RecommendInput, band: TemperatureB
   const signature = signatureOf(items);
   if (input.recentOutfitSignatures.includes(signature)) score -= SCORE_WEIGHTS.similarOutfitPenalty;
 
-  return { items, score, reasons: dedupe(reasons), gaps, signature };
+  return { items, score, reasons: dedupe(reasons), gaps, signature, itemNotes: itemNotesFor(items, input, rule, rainAvoidedLight) };
+}
+
+/** First applicable rule wins per item: weather role > rain > pinned > underused > season > taste. */
+function itemNotesFor(items: RecItem[], input: RecommendInput, rule: ActiveRule | null, rainAvoidedLight: boolean): Record<string, string> {
+  const notes: Record<string, string> = {};
+  const set = (it: RecItem, text: string) => {
+    if (!notes[it.key]) notes[it.key] = text;
+  };
+  const w = input.weather;
+  for (const it of items) {
+    if (it.category === 'outer' && rule?.outer === 'required') set(it, rule.nudge === 'layering' ? '일교차 대비 겉옷' : rule.nudge === 'wind' ? '바람 대비 겉옷' : `${bandLabel(rule.band)} 날씨 겉옷`);
+    if (input.weatherEnabled && w.rainLikely) {
+      if (it.waterResistant === true) set(it, '방수로 기록한 옷');
+      else if (rainAvoidedLight && RAIN_SENSITIVE.includes(it.category) && !isLight(it)) set(it, '비 와도 티 덜 나는 색');
+    }
+    if (input.pinnedKeys.includes(it.key)) set(it, '고정한 옷');
+    if (it.daysSinceWorn != null && it.daysSinceWorn >= UNDERUSED_DAYS) set(it, `${UNDERUSED_DAYS}일 넘게 안 입은 옷`);
+    const season = rule?.seasons.find((x) => it.seasonTags.includes(x));
+    if (season && !(rule && it.seasonTags.every((t) => rule.offSeasons.includes(t)))) set(it, `${labelOf(SEASONS, season)} 옷`);
+    if (input.taste.personalizationEnabled) {
+      const style = it.styleTags.find((t) => input.taste.preferredStyles.includes(t));
+      if (style) set(it, `취향: ${styleKo(style)}`);
+    }
+  }
+  return notes;
 }
 
 function dedupe(reasons: Reason[]): Reason[] {

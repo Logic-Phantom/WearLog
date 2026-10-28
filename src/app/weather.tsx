@@ -7,7 +7,8 @@ import { StyleSheet, View } from 'react-native';
 import { AppSwitch, AppText, BottomSheet, Card, ChipRow, InlineMessage, ListRow, PrimaryButton, Row, ScreenScroll, SecondaryButton, SectionTitle, SourceBadge, radius, spacing, useColors } from '@/design-system';
 import type { ForecastPeriod, ManualWeather, WeatherSnapshot } from '@/domain/models';
 import { SAMPLE_LOOKS } from '@/features/community/sample-feed';
-import { isSnapshotFresh } from '@/features/weather/weather-signal';
+import { isSnapshotFresh, resolveWeatherSignal } from '@/features/weather/weather-signal';
+import { OutfitGuideCard } from '@/features/weather/components/OutfitGuideCard';
 import { MANUAL_WEATHER_OPTIONS } from '@/domain/recommendation-policy';
 import { WeatherCard } from '@/features/weather/components/WeatherCard';
 import { KOREA_AREAS, getArea } from '@/infrastructure/weather-providers/korea-areas';
@@ -24,7 +25,7 @@ const PERIOD_LABEL: Record<ForecastPeriod, string> = { now: '지금', morning: '
 export default function WeatherScreen() {
   const router = useRouter();
   const c = useColors();
-  const { weather, weatherLoading, weatherError, weatherPrefs, updateWeatherPrefs, refresh, manualWeather, setManualWeather, period } = useAppState();
+  const { weather, weatherLoading, weatherError, weatherPrefs, updateWeatherPrefs, refresh, manualWeather, setManualWeather, period, weatherContext } = useAppState();
   const [areaSheet, setAreaSheet] = useState(false);
   const area = weatherPrefs.manualAreaId ? getArea(weatherPrefs.manualAreaId) : null;
   const hourly = (['morning', 'afternoon', 'evening'] as const).flatMap((id) => {
@@ -41,6 +42,7 @@ export default function WeatherScreen() {
   return (
     <ScreenScroll>
       <WeatherCard snapshot={weather?.[period] ?? weather?.now ?? null} manual={manualWeather} loading={weatherLoading} error={weatherError} onPress={() => refresh()} locationLabel={area?.label ?? null} />
+      <OutfitGuideCard weather={resolveWeatherSignal(weatherContext)} />
 
       {/* Showcase hourly strip: only periods the provider actually returned. */}
       {hourly.length > 1 ? (

@@ -18,6 +18,8 @@ export const SCORE_WEIGHTS = {
   similarOutfitPenalty: 0.8,
   /** Item whose season tags all fall in the band's `offSeasons` (e.g. a spring/summer tee when chilly). */
   offSeasonPenalty: 1.5,
+  /** Rain: light bottoms/shoes (luminance group 2) stain easily. */
+  rainLightColorPenalty: 0.6,
 } as const;
 
 /** Days an item counts as "recently worn" for the repeat penalty. */
@@ -72,6 +74,21 @@ export const MANUAL_WEATHER_OPTIONS: readonly { id: ManualWeather; labelKo: stri
 export const RAIN_PROBABILITY_THRESHOLD_PCT = 60;
 /** Wind speed (m/s) at/above which an outer layer is nudged up one level. */
 export const WINDY_THRESHOLD_MPS = 7;
+/**
+ * 일교차(°C, provider max − min) at/above which a removable outer is nudged up one level and the
+ * colder end's outer weights become acceptable. 10°C matches 기상청's usual "일교차 큰 날" advisories.
+ */
+export const DAILY_RANGE_LAYER_THRESHOLD_C = 10;
+
+/** One-line "오늘 옷차림" guide per band (shown with the weather; not a score input). */
+export const BAND_OUTFIT_GUIDE: Record<TemperatureBand, string> = {
+  freezing: '두꺼운 패딩·코트에 니트, 목도리·장갑까지',
+  cold: '코트나 두꺼운 재킷에 니트·맨투맨',
+  chilly: '가벼운 재킷·가디건에 긴팔·셔츠',
+  mild: '긴팔 티·셔츠, 얇은 겉옷은 선택',
+  warm: '반팔·얇은 셔츠, 겉옷 없이',
+  hot: '통기성 좋은 반팔·반바지, 밝은 색',
+};
 
 export interface BandRule {
   /** Whether an outer layer is required / allowed / discouraged. */

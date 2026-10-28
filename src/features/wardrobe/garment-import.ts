@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import type { GarmentCategory } from '@/domain/categories';
 import { AppError } from '@/domain/errors';
 import type { GarmentItem } from '@/domain/models';
-import { renderJpeg } from '@/infrastructure/image-processing/image-pipeline';
+import { renderImage } from '@/infrastructure/image-processing/image-pipeline';
 import { persistGarmentFile } from '@/infrastructure/file-storage/app-files';
 import { downloadProductImage, fetchPageHtml } from '@/infrastructure/product-link/link-fetcher';
 
@@ -17,6 +17,13 @@ export interface PickedPhoto {
   uri: string;
   width: number;
   height: number;
+  /** From the picker when known; decides whether transparency must be kept. */
+  mimeType?: string | null;
+}
+
+/** PNG/WebP may carry transparency (product cut-outs); JPEG would fill it with black. */
+export function mayHaveAlpha(photo: Pick<PickedPhoto, 'uri' | 'mimeType'>): boolean {
+  return /image\/(png|webp)/i.test(photo.mimeType ?? '') || /\.(png|webp)(\?|$)/i.test(photo.uri) || /^data:image\/(png|webp)/i.test(photo.uri);
 }
 
 /**
@@ -32,7 +39,7 @@ export async function pickGarmentPhoto(source: 'library' | 'camera'): Promise<Pi
   const res = source === 'camera' ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
   if (res.canceled || !res.assets?.[0]) return null;
   const a = res.assets[0];
-  return { uri: a.uri, width: a.width, height: a.height };
+  return { uri: a.uri, width: a.width, height: a.height, mimeType: a.mimeType ?? null };
 }
 
 /**
@@ -42,7 +49,7 @@ export async function pickGarmentPhoto(source: 'library' | 'camera'): Promise<Pi
 export async function pickGarmentPhotos(limit: number): Promise<PickedPhoto[]> {
   const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1, exif: false, allowsMultipleSelection: true, selectionLimit: limit, orderedSelection: true });
   if (res.canceled || !res.assets) return [];
-  return res.assets.map((a) => ({ uri: a.uri, width: a.width, height: a.height }));
+  return res.assets.map((a) => ({ uri: a.uri, width: a.width, height: a.height, mimeType: a.mimeType ?? null }));
 }
 
 /**
@@ -50,13 +57,16 @@ export async function pickGarmentPhotos(limit: number): Promise<PickedPhoto[]> {
  * is only read. Background removal / segmentation is NOT done here — that waits for the Phase 0
  * vision POC (docs/VISION_POC.md); the UI says "자동 분석 미지원".
  */
-export async function storeGarmentPhoto(photo: PickedPhoto, garmentId: string): Promise<Pick<GarmentItem, 'originalUri' | 'thumbnailUri'>> {
+export async function storeGarmentPhoto(photo: PickedPhoto, garmentId: string): Promise<Pick<GarmentItem, 'originalUri' | 'thumbnailUri' | 'cutoutUri'>> {
   const size = { width: photo.width, height: photo.height };
-  const work = await renderJpeg(photo.uri, size, WORKING_MAX, 0.88, process.env.EXPO_OS === 'web');
-  const thumb = await renderJpeg(photo.uri, size, THUMB_MAX, 0.8, process.env.EXPO_OS === 'web');
-  const originalUri = await persistGarmentFile(work.uri, garmentId, 'original', work.base64);
-  const thumbnailUri = await persistGarmentFile(thumb.uri, garmentId, 'thumb', thumb.base64);
-  return { originalUri, thumbnailUri };
+  const web = process.env.EXPO_OS === 'web';
+  // Transparent sources stay PNG (no black box) and double as the cut-out used on canvases.
+  const format = mayHaveAlpha(photo) ? 'png' : 'jpeg';
+  const work = await renderImage(photo.uri, size, WORKING_MAX, 0.88, web, format);
+  const thumb = await renderImage(photo.uri, size, THUMB_MAX, 0.8, web, format);
+  const originalUri = await persistGarmentFile(work.uri, garmentId, 'original', work.base64, format);
+  const thumbnailUri = await persistGarmentFile(thumb.uri, garmentId, 'thumb', thumb.base64, format);
+  return { originalUri, thumbnailUri, cutoutUri: format === 'png' ? originalUri : null };
 }
 
 export interface LinkImport {

@@ -58,6 +58,7 @@ export default function AddGarmentScreen() {
         key={batch.index}
         initial={emptyGarment()}
         initialPhoto={batch.photos[batch.index]}
+        initialPhotoNote="고른 사진을 불러왔어요. 이름·카테고리를 골라 등록하거나 건너뛰세요."
         onSaved={() => next('saved')}
         header={
           <Row style={{ justifyContent: 'space-between', marginBottom: spacing.sm }}>

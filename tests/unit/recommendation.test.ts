@@ -147,3 +147,73 @@ describe('weather season fit', () => {
     expect(refsSignature([{ kind: 'sampleTemplate', templateId: 'jeans', customization: { colorId: 'denimBlue' } }, { kind: 'ownedGarment', garmentItemId: 'x' }])).toBe('owned:x|sample:jeans');
   });
 });
+
+describe('weather detail rules (일교차 · 바람 · 비 색상)', () => {
+  const base3 = [owned('tee', 'top', { seasonTags: ['spring', 'fall'] }), owned('jeans', 'bottom'), owned('sneakers', 'shoes', { colorIds: ['black'] })];
+  const mild = (extra: Partial<WeatherSignal>): WeatherSignal => ({ band: 'mild', rainLikely: false, windy: false, indoor: false, summary: '현재 20°C', source: 'snapshot', ...extra });
+
+  it('a big daily range makes an outer required on a mild day and quotes the real low/high', () => {
+    const items = [...base3, owned('jacket', 'outer', { outerWeight: 'light' })];
+    const plain = recommend(base(items, { weather: mild({}) }));
+    if (plain.kind !== 'ok') throw new Error();
+    expect(plain.results.some((r) => !r.items.some((i) => i.category === 'outer'))).toBe(true);
+
+    const r = recommend(base(items, { weather: mild({ layering: { minC: 9, maxC: 21 } }) }));
+    if (r.kind !== 'ok') throw new Error();
+    for (const rec of r.results) expect(rec.items.some((i) => i.category === 'outer')).toBe(true);
+    expect(r.results[0].reasons.find((x) => x.code === 'weatherOuter')!.text).toContain('최저 9° / 최고 21°');
+  });
+
+  it('accepts the colder end’s outer weight when the swing is large', () => {
+    const items = [...base3, owned('light', 'outer', { outerWeight: 'light' }), owned('medium', 'outer', { outerWeight: 'medium' })];
+    // mild alone accepts only light; with a 5°C low (cold band) medium is acceptable too, so it isn't penalized.
+    const r = recommend(base(items, { weather: mild({ layering: { minC: 5, maxC: 20 } }) }));
+    if (r.kind !== 'ok') throw new Error();
+    const outers = new Set(r.results.map((x) => x.items.find((i) => i.category === 'outer')?.key));
+    expect(outers.has('owned:medium')).toBe(true);
+  });
+
+  it('strong wind raises the outer requirement and says why; missing outer becomes a gap', () => {
+    const withOuter = recommend(base([...base3, owned('jk', 'outer', { outerWeight: 'light' })], { weather: mild({ windy: true, windSpeedMps: 9 }) }));
+    if (withOuter.kind !== 'ok') throw new Error();
+    expect(withOuter.results[0].reasons.find((x) => x.code === 'weatherOuter')!.text).toContain('초속 9m');
+    const noOuter = recommend(base(base3, { weather: mild({ windy: true, windSpeedMps: 9 }) }));
+    if (noOuter.kind !== 'ok') throw new Error();
+    expect(noOuter.results[0].gaps[0]).toContain('바람');
+  });
+
+  it('rain prefers dark bottoms/shoes over light ones and explains it', () => {
+    const items = [owned('top', 'top'), owned('cream-pants', 'bottom', { colorIds: ['cream'] }), owned('black-pants', 'bottom', { colorIds: ['black'] }), owned('shoes', 'shoes', { colorIds: ['black'] })];
+    const r = recommend(base(items, { taste: { ...taste, preferredStyles: [] }, weather: mild({ rainLikely: true }) }));
+    if (r.kind !== 'ok') throw new Error();
+    expect(r.results[0].items.find((i) => i.category === 'bottom')!.key).toBe('owned:black-pants');
+    expect(r.results[0].reasons.some((x) => x.code === 'rainColor')).toBe(true);
+  });
+});
+
+describe('item notes (visual breakdown)', () => {
+  const mild = (extra: Partial<WeatherSignal>): WeatherSignal => ({ band: 'mild', rainLikely: false, windy: false, indoor: false, summary: '현재 20°C', source: 'snapshot', ...extra });
+
+  it('tags the outer, rain-safe bottoms and underused pieces with the rule that picked them', () => {
+    const items = [
+      owned('knit', 'top', { seasonTags: ['fall'], daysSinceWorn: 45 }),
+      owned('cream', 'bottom', { colorIds: ['cream'] }),
+      owned('black', 'bottom', { colorIds: ['black'] }),
+      owned('shoes', 'shoes', { colorIds: ['black'] }),
+      owned('jacket', 'outer', { outerWeight: 'light' }),
+    ];
+    const r = recommend(base(items, { taste: { ...taste, preferredStyles: [] }, weather: mild({ layering: { minC: 8, maxC: 20 }, rainLikely: true }) }));
+    if (r.kind !== 'ok') throw new Error();
+    const n = r.results[0].itemNotes;
+    expect(n['owned:jacket']).toBe('일교차 대비 겉옷');
+    expect(n['owned:black']).toBe('비 와도 티 덜 나는 색');
+    expect(n['owned:knit']).toBe('30일 넘게 안 입은 옷');
+  });
+
+  it('says nothing about weather when weather is off', () => {
+    const items = [owned('t', 'top'), owned('b', 'bottom'), owned('s', 'shoes'), owned('o', 'outer', { outerWeight: 'light' })];
+    const r = recommend(base(items, { taste: { ...taste, preferredStyles: [] }, weather: mild({ layering: { minC: 8, maxC: 20 } }), weatherEnabled: false }));
+    if (r.kind !== 'ok') throw new Error();
+    for (const rec of r.results) expect(Object.values(rec.itemNotes).some((t) => t.includes('겉옷'))).toBe(false);
+  });
+});
