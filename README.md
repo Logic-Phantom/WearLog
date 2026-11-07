@@ -347,3 +347,7 @@ npx expo start --web --port 8091   # 웹 미리보기(UI 확인용, 출시 대�
 - 정책 페이지: 운영자 `Forest_LIM`, 문의 `dlacoaud96@gmail.com`(소유자 지정, `.env.local`)으로 `node scripts/build-legal-site.mjs` → `docs/legal/*.html` 5개 → GitHub Pages(main `/docs`).
 - 공개 확인: https://logic-phantom.github.io/WearLog/legal/privacy.html · …/account-deletion.html 등 5개 모두 200.
 - 미검증: 실기기 런처에서 적응형 아이콘이 잘리는 모양. 처리방침의 서버 위치(서울 가정)는 Supabase 실제 리전과 대조하지 않음. 법률 검토 전 초안.
+
+### 2026-11-07 — Play Console 앱 콘텐츠 일부 입력
+- 저장 완료: 개인정보처리방침 URL(`…/legal/privacy.html`), 광고 "없음", 광고 ID "사용 안 함"(`AD_ID` 차단과 일치), 정부 앱 아님, 금융 기능 없음, 건강 기능 없음.
+- 남음: 앱 액세스(커뮤니티는 로그인 필요 → 심사용 계정·안내 결정 필요, 이게 끝나야 타겟층 선언 가능), 콘텐츠 등급(IARC 약관 동의 필요 — 이번엔 자동 진행이 차단돼 미진행), 타겟층, 데이터 보안. 게시 개요의 "검토 전송"은 아직 안 함.
