@@ -91,6 +91,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a3f46cf1-72e1-4922-b526-a4025ec27a9c"
+      }
+    },
+    "owner": "lcm2"
   }
 }
