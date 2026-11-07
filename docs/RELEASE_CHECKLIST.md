@@ -52,7 +52,8 @@
 - [x] 스토어 등록정보(2026-11-07): 간단한 설명·자세한 설명, 아이콘 512, 그래픽 이미지 1024×500, 휴대전화 스크린샷 4장(`assets/store/`, 웹 미리보기 1080×1920). 아이콘·그래픽·스크린샷은 AI 생성/수정 애셋으로 라벨(보수적 선택 — 실제 출처 확인 필요). 스토어 설정: 카테고리 라이프스타일, 연락처 이메일·웹사이트.
 - [x] EAS 프로젝트 @lcm2/wearlog 연결, EAS 환경변수(production·preview)에 EXPO_PUBLIC_* 4개, production AAB 빌드 성공(versionCode 2, 키스토어는 EAS 관리).
 - [x] 비공개 테스트 Alpha: 국가 대한민국, 테스터 목록 "WearLog 비공개 테스터" 15명, 의견 이메일, 출시 0.1.0 (2) 초안(출시 노트 포함).
-- [ ] AAB 업로드(82MB — 브라우저 자동 업로드 한도 초과, 소유자가 직접) → 검토 전송 → 12명 이상 14일 테스트 → 프로덕션 신청
+- [x] 콘텐츠 등급 설문·AAB 업로드(소유자, 2026-11-07)
+- [ ] 검토 전송 막힘: 게시 개요 빠른 검사 "계정 세부정보 업데이트 — 대한민국 개발자 추가 정보"(계정 > 계정 세부정보의 사업자 등록 번호·전자상거래 라이선스 등, 소유자 입력) 해결 후 "검토를 위해 변경사항 14개 제출" → 12명 이상 14일 테스트 → 프로덕션 신청
 - [x] Play Console 앱 생성(2026-11-07, Forest_LIM 계정): 이름 WearLog, 패키지 `app.wearlog.mobile`, 기본 언어 ko-KR, 앱·무료(공개 후 유료 전환 불가). 앱 ID 4975901293107440991
 - [x] 정책 웹페이지 공개(2026-11-07, 운영자 Forest_LIM·문의 dlacoaud96@gmail.com): 처리방침 https://logic-phantom.github.io/WearLog/legal/privacy.html , 계정 삭제 https://logic-phantom.github.io/WearLog/legal/account-deletion.html , 약관 …/legal/terms.html (GitHub Pages main `/docs`, 5개 페이지 200 확인). 법률 검토 전 초안.
 - [ ] Play 데이터 보안 양식: 위치(대략, 선택·전송은 격자만·저장 안 함), 사진(기기 내 처리, 게시 시만 업로드), 이메일·사용자 ID(커뮤니티 선택), 앱 활동(하트·신고)
