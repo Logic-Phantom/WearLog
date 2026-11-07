@@ -45,7 +45,9 @@
 
 ## D. 스토어
 - [x] Play 앱 콘텐츠(2026-11-07): 개인정보처리방침 URL, 광고 없음, 광고 ID 미사용, 정부 앱 아님, 금융 기능 없음, 건강 기능 없음 — 저장됨(게시 개요에서 검토 전송 전).
-- [ ] Play 앱 콘텐츠 남음: 앱 액세스(로그인 세부정보 — 커뮤니티 로그인 심사용 계정 필요, 타겟층 선언의 선행 조건), 콘텐츠 등급(IARC), 타겟층, 데이터 보안
+- [x] 앱 액세스: 계정 없이 영문 안내문만("아무 Google·카카오 계정으로 커뮤니티 로그인"). Google이 심사용 계정을 요구하면 테스트 Google 계정 추가 필요.
+- [x] 타겟층: 13~15세·16~17세·18세 이상
+- [ ] Play 앱 콘텐츠 남음: 콘텐츠 등급(IARC — 이메일·약관 동의는 소유자가 직접), 데이터 보안
 - [x] Play Console 앱 생성(2026-11-07, Forest_LIM 계정): 이름 WearLog, 패키지 `app.wearlog.mobile`, 기본 언어 ko-KR, 앱·무료(공개 후 유료 전환 불가). 앱 ID 4975901293107440991
 - [x] 정책 웹페이지 공개(2026-11-07, 운영자 Forest_LIM·문의 dlacoaud96@gmail.com): 처리방침 https://logic-phantom.github.io/WearLog/legal/privacy.html , 계정 삭제 https://logic-phantom.github.io/WearLog/legal/account-deletion.html , 약관 …/legal/terms.html (GitHub Pages main `/docs`, 5개 페이지 200 확인). 법률 검토 전 초안.
 - [ ] Play 데이터 보안 양식: 위치(대략, 선택·전송은 격자만·저장 안 함), 사진(기기 내 처리, 게시 시만 업로드), 이메일·사용자 ID(커뮤니티 선택), 앱 활동(하트·신고)
