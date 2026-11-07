@@ -44,6 +44,7 @@
 - [ ] 실기기에서 카카오·Google·이메일 로그인 왕복, 두 계정으로 게시→하트→신고→차단→삭제→계정 삭제
 
 ## D. 스토어
+- [x] Play Console 앱 생성(2026-11-07, Forest_LIM 계정): 이름 WearLog, 패키지 `app.wearlog.mobile`, 기본 언어 ko-KR, 앱·무료(공개 후 유료 전환 불가). 앱 ID 4975901293107440991
 - [ ] `node scripts/build-legal-site.mjs` → GitHub Pages(`main` `/docs`) → 처리방침 URL `…/WearLog/legal/privacy.html`, Play 계정 삭제 URL `…/legal/account-deletion.html`
 - [ ] Play 데이터 보안 양식: 위치(대략, 선택·전송은 격자만·저장 안 함), 사진(기기 내 처리, 게시 시만 업로드), 이메일·사용자 ID(커뮤니티 선택), 앱 활동(하트·신고)
 - [ ] 콘텐츠 등급: 사용자 생성 콘텐츠·사용자 간 공유 "예", 타겟 연령 만 14세 이상

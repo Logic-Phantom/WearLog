@@ -337,3 +337,12 @@ npx expo start --web --port 8091   # 웹 미리보기(UI 확인용, 출시 대�
 - 버그 수정: 투명 배경 PNG/WebP 옷 사진이 검은 배경으로 저장되던 문제 → PNG로 보존 + 컷아웃으로 사용. 여러 장 등록 화면 안내 문구가 "공유한 사진" 문구로 나오던 것 수정.
 - 확인(웹 미리보기): 샘플 사진 4장을 **여러 장 한 번에 등록**(1/4→4/4)으로 내 옷 등록 → 실제 기상청 날씨로 추천: 블랙 집업 재킷("쌀쌀함 날씨 겉옷") + 차콜 니트 + 미드 블루 데님 + 화이트 스니커즈, 기온 막대·가이드 표시. 수정 후 PNG 재등록 시 투명 배경 유지 확인. `jest` 105/105, `tsc`·`lint` 통과.
 - 알려진 제한: 웹에서는 `Alert`가 표시되지 않아 여러 장 등록 완료 요약 창이 안 보임(네이티브는 정상 예상, 실기기 미검증). 웹 미리보기에 남은 테스트 옷 5벌은 브라우저 저장소에만 있음.
+
+### 2026-11-07 — Google Play Console 앱 생성
+- Play Console(개발자 계정 Forest_LIM)에 **WearLog** 앱 생성: 패키지 `app.wearlog.mobile`(`app.json`과 일치, 생성 후 변경 불가), 기본 언어 한국어(ko-KR), 앱·무료. 개발자 프로그램 정책·미국 수출법 선언은 소유자 승인 후 동의.
+- 대시보드 진입까지 확인. 아직 안 한 것: 스토어 등록정보·앱 콘텐츠(처리방침 URL, 데이터 보안, 콘텐츠 등급, 타겟 연령, 계정 삭제 URL), EAS production 빌드(AAB) 업로드, 비공개 테스트(12명×14일). → `docs/RELEASE_CHECKLIST.md` D.
+
+### 2026-11-07 — 새 앱 아이콘 적용, 정책 웹페이지 공개
+- 소유자가 준 아이콘(옷걸이+흰 티, 초록 강조선)으로 `assets/images/icon.png`(1024, 꽉 찬 정사각형), `adaptive-icon.png`(안전 영역 안으로 축소, 배경 `#FDFBF7`), `splash-icon.png`(모서리 투명) 교체, Play 스토어용 `assets/store/play-icon-512.png` 추가.
+- 정책 페이지: 운영자 `Forest_LIM`, 문의 `dlacoaud96@gmail.com`(소유자 지정, `.env.local`)으로 `node scripts/build-legal-site.mjs` → `docs/legal/*.html` 5개 → GitHub Pages(main `/docs`).
+- 미검증: 실기기 런처에서 적응형 아이콘이 잘리는 모양. 처리방침의 서버 위치(서울 가정)는 Supabase 실제 리전과 대조하지 않음. 법률 검토 전 초안.
