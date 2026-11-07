@@ -345,4 +345,5 @@ npx expo start --web --port 8091   # 웹 미리보기(UI 확인용, 출시 대�
 ### 2026-11-07 — 새 앱 아이콘 적용, 정책 웹페이지 공개
 - 소유자가 준 아이콘(옷걸이+흰 티, 초록 강조선)으로 `assets/images/icon.png`(1024, 꽉 찬 정사각형), `adaptive-icon.png`(안전 영역 안으로 축소, 배경 `#FDFBF7`), `splash-icon.png`(모서리 투명) 교체, Play 스토어용 `assets/store/play-icon-512.png` 추가.
 - 정책 페이지: 운영자 `Forest_LIM`, 문의 `dlacoaud96@gmail.com`(소유자 지정, `.env.local`)으로 `node scripts/build-legal-site.mjs` → `docs/legal/*.html` 5개 → GitHub Pages(main `/docs`).
+- 공개 확인: https://logic-phantom.github.io/WearLog/legal/privacy.html · …/account-deletion.html 등 5개 모두 200.
 - 미검증: 실기기 런처에서 적응형 아이콘이 잘리는 모양. 처리방침의 서버 위치(서울 가정)는 Supabase 실제 리전과 대조하지 않음. 법률 검토 전 초안.
